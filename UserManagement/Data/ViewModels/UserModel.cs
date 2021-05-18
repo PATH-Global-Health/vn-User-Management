@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Data.ViewModels
 {
@@ -56,5 +57,23 @@ namespace Data.ViewModels
     {
         public List<UiPermissionModel> UiPermissions { get; set; }
         public List<ResourcePermissionModel> ResourcePermissions { get; set; }
+    }
+    public class GenerateResetPasswordOTPModel
+    {
+        [Required]
+        public string Username { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public List<SecurityQuestionModel> Questions { get; set; }
+    }
+    public class ResetPasswordModel
+    {
+        public string Username { get; set; }
+        public string NewPassword { get; set; }
+    }
+    public class ConfirmResetPasswordOTPModel
+    {
+        public string Username { get; set; }
+        public string OTP { get; set; }
     }
 }

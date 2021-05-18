@@ -18,6 +18,9 @@ namespace Service.Interfaces
         ResultModel UpdateInformation(UserUpdateModel model, string userId);
         UserInformationModel GetUserInformation(string userId);
         ResultModel ImportUsers(List<ImportUserModel> model);
+        Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model);
+        Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model);
+        Task<ResultModel> ResetPassword(ResetPasswordModel model);
 
         List<RoleModel> GetRoles(string userId);
         List<GroupModel> GetGroups(string userId);

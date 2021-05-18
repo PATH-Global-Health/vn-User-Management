@@ -139,5 +139,30 @@ namespace UserManagement_App.Controllers
             var roles = _userService.GetRoles(id);
             return Ok(roles);
         }
+
+        [AllowAnonymous]
+        [HttpPost("ResetPassword/GenerateOTP")]
+        public async Task<IActionResult> GenerateResetPasswordOTPAsync([FromBody] GenerateResetPasswordOTPModel model)
+        {
+            var result = await _userService.GenerateResetPasswordOTP(model);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
+        [AllowAnonymous]
+        [HttpPost("ResetPassword/ConfirmOTP")]
+        public async Task<IActionResult> ConfirmResetPasswordOTPAsync(ConfirmResetPasswordOTPModel model)
+        {
+            var result = await _userService.ConfirmResetPasswordOTP(model);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+        [AllowAnonymous]
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
+        {
+            var result = await _userService.ResetPassword(model);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }

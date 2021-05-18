@@ -372,5 +372,100 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                model.Username = model.Username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    result.ErrorMessage = "Username is incorrect";
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(model.PhoneNumber))
+                    {
+                        if (user.PhoneNumber.Equals(model.PhoneNumber))
+                        {
+                            result.Succeed = true;
+                        }
+                        else
+                        {
+                            result.ErrorMessage = "Phone Number does not match";
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(model.Email))
+                    {
+                        if (user.Email.Equals(model.Email))
+                        {
+                            result.Succeed = true;
+                        }
+                        else
+                        {
+                            result.ErrorMessage = "Email does not match";
+                        }
+                    }
+                    else if (model.Questions != null && model.Questions.Count > 0)
+                    {
+                        // No security question of user to check
+                        // check later
+                        result.Succeed = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        public async Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                model.Username = model.Username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
+                // 123456 is default
+                // check user.ResetPasswordOTP with OTP later
+                if (!model.OTP.Equals("123456"))
+                {
+                    result.ErrorMessage = "OTP is incorrect";
+                }
+                else
+                {
+                    var accessToken = GetAccessToken(user);
+                    result.Data = accessToken;
+                    result.Succeed = true;
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        public async Task<ResultModel> ResetPassword(ResetPasswordModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                //model.Username = model.Username.ToUpper();
+                //var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefault();
+                // check user.resetPasswordToken with resetPasswordModel.ResetPasswordToken later
+                // change user.Password to new password
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }
