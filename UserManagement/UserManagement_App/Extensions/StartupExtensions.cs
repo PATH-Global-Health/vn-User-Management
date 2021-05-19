@@ -28,6 +28,7 @@ namespace UserManagement_App.Extensions
             services.AddSingleton<IHostedService, Consumer>();
             services.AddScoped<IUserProfileService, UserProfileService>();
             services.AddScoped<IProvincialService, ProvincialService>();
+            services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
         }
 
         public static void ConfigSwagger(this IServiceCollection services)
