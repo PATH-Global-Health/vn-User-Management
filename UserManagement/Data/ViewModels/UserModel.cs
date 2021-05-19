@@ -65,7 +65,7 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public List<AnswerSecurityQuestionModel> Questions { get; set; }
+        public AnswerSecurityQuestionModel SecurityQuestion { get; set; }
     }
     public class ResetPasswordModel
     {

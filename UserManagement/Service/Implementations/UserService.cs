@@ -410,11 +410,16 @@ namespace Service.Implementations
                             result.ErrorMessage = "Email does not match";
                         }
                     }
-                    else if (model.Questions != null && model.Questions.Count > 0)
+                    else if (model.SecurityQuestion != null)
                     {
-                        // No security question of user to check
-                        // check later
-                        result.Succeed = true;
+                        if (model.SecurityQuestion.Id.Equals(user.SecurityQuestionId) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
+                        {
+                            result.Succeed = true;
+                        }
+                        else
+                        {
+                            result.ErrorMessage = "Security Question doesn't match";
+                        }
                     }
                 }
             }
