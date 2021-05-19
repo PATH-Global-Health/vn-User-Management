@@ -17,6 +17,9 @@ namespace Data.MongoCollections
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
 
+        public string SecurityQuestionId { get; set; }
+        public string SecurityQuestionAnswer { get; set; }
+
         /// <summary>
         /// References to Role Collection
         /// </summary>

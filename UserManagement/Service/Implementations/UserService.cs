@@ -96,6 +96,8 @@ namespace Service.Implementations
                     NormalizedEmail = string.IsNullOrEmpty(model.Email) ? "" : model.Email.ToUpper(),
                     PhoneNumber = model.PhoneNumber,
                     FullName = model.FullName,
+                    SecurityQuestionId = model.SecurityQuestion.Id,
+                    SecurityQuestionAnswer = model.SecurityQuestion.Answer,
                 };
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
 
