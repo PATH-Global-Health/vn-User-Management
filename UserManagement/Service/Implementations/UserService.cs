@@ -96,8 +96,6 @@ namespace Service.Implementations
                     NormalizedEmail = string.IsNullOrEmpty(model.Email) ? "" : model.Email.ToUpper(),
                     PhoneNumber = model.PhoneNumber,
                     FullName = model.FullName,
-                    SecurityQuestionId = model.SecurityQuestion.Id,
-                    SecurityQuestionAnswer = model.SecurityQuestion.Answer,
                 };
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
 
@@ -412,13 +410,20 @@ namespace Service.Implementations
                     }
                     else if (model.SecurityQuestion != null)
                     {
-                        if (model.SecurityQuestion.Id.Equals(user.SecurityQuestionId) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
+                        if (string.IsNullOrEmpty(user.SecurityQuestionId))
                         {
-                            result.Succeed = true;
+                            result.ErrorMessage = "User has no security question";
                         }
                         else
                         {
-                            result.ErrorMessage = "Security Question doesn't match";
+                            if (model.SecurityQuestion.Id.Equals(user.SecurityQuestionId) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
+                            {
+                                result.Succeed = true;
+                            }
+                            else
+                            {
+                                result.ErrorMessage = "Security Question doesn't match";
+                            }
                         }
                     }
                 }
