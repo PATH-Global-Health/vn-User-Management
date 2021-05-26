@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using Service.Helper;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -386,6 +387,11 @@ namespace Service.Implementations
                 }
                 else
                 {
+                    var otp = OTPHepler.GenerateOTP();
+
+                    user.OTP = otp;
+                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+
                     if (!string.IsNullOrEmpty(model.PhoneNumber))
                     {
                         if (user.PhoneNumber.Equals(model.PhoneNumber))
