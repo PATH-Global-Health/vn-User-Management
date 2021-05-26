@@ -14,9 +14,9 @@ namespace Service.Helper
             };
         }
 
-        public static bool ValidateOTP(OTP otp)
+        public static bool ValidateOTP(string checkOTP, OTP otp)
         {
-            if (otp.ExpiredTime < DateTime.Now)
+            if (otp.ExpiredTime < DateTime.Now || checkOTP != otp.Value)
                 return false;
             return true;
         }

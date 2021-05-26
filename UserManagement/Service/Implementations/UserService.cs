@@ -450,12 +450,14 @@ namespace Service.Implementations
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
                 // 123456 is default
                 // check user.ResetPasswordOTP with OTP later
-                if (!model.OTP.Equals("123456"))
+
+                if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                 {
-                    result.ErrorMessage = "OTP is incorrect";
+                    result.ErrorMessage = "OTP is incorrect or expired";
                 }
                 else
                 {
+                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null));
                     var accessToken = GetAccessToken(user);
                     result.Data = accessToken;
                     result.Succeed = true;
@@ -468,16 +470,18 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<ResultModel> ResetPassword(ResetPasswordModel model)
+        public async Task<ResultModel> ResetPassword(ResetPasswordModel model, string username)
         {
             var result = new ResultModel();
             try
             {
-                //model.Username = model.Username.ToUpper();
-                //var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefault();
-                // check user.resetPasswordToken with resetPasswordModel.ResetPasswordToken later
-                // change user.Password to new password
-                result.Succeed = true;
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
+
+                var passwordHasher = new PasswordHasher<UserInformation>();
+                var update = await _dbContext.Users.UpdateOneAsync(i => i.NormalizedUsername == username, Builders<UserInformation>.Update.Set(x => x.HashedPassword, passwordHasher.HashPassword(user, model.NewPassword)));
+
+                result.Succeed = update.ModifiedCount == 1;
             }
             catch (Exception e)
             {

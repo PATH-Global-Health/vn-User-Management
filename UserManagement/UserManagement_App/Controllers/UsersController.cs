@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using UserManagement_App.Extensions;
 
@@ -156,11 +157,11 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
         {
-            var result = await _userService.ResetPassword(model);
+            var result = await _userService.ResetPassword(model, User?.FindFirst("Username")?.Value);
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }

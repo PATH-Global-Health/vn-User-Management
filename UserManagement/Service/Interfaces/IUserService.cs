@@ -20,7 +20,7 @@ namespace Service.Interfaces
         ResultModel ImportUsers(List<ImportUserModel> model);
         Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model);
         Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model);
-        Task<ResultModel> ResetPassword(ResetPasswordModel model);
+        Task<ResultModel> ResetPassword(ResetPasswordModel model, string username);
 
         List<RoleModel> GetRoles(string userId);
         List<GroupModel> GetGroups(string userId);
