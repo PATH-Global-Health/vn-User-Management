@@ -17,7 +17,7 @@ namespace Data.MongoCollections
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
 
-        public string SecurityQuestionId { get; set; }
+        public SecurityQuestion SecurityQuestion { get; set; }
         public string SecurityQuestionAnswer { get; set; }
 
         /// <summary>

@@ -8,6 +8,10 @@ namespace Service.Interfaces
 {
     public interface ISecurityQuestionService
     {
-        ResultModel GetAll();
+        Task<ResultModel> GetAll();
+        Task<ResultModel> Get(string id);
+        Task<ResultModel> Create(CreateSecurityQuestionModel model);
+        Task<ResultModel> Update(UpdateSecurityQuestionModel model);
+        Task<ResultModel> Delete(string id);
     }
 }

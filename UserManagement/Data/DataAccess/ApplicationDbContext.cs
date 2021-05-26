@@ -21,5 +21,6 @@ namespace Data.DataAccess
         public IMongoCollection<UserInformation> Users => _db.GetCollection<UserInformation>("users");
         public IMongoCollection<UserProfile> UserProfiles => _db.GetCollection<UserProfile>("userProfiles");
         public IMongoCollection<ProvincialInformation> ProvincialInformation => _db.GetCollection<ProvincialInformation>("provincialInformation");
+        public IMongoCollection<SecurityQuestion> SecurityQuestions => _db.GetCollection<SecurityQuestion>("securityQuestions");
     }
 }
