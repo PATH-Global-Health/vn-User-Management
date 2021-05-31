@@ -4,13 +4,12 @@ using System.Text;
 
 namespace Data.ViewModels
 {
-    public class SecurityQuestionModel
+    public class CreateSecurityQuestionModel
     {
-        public SecurityQuestionModel(string id, string answer)
-        {
-            Id = id;
-            Question = answer;
-        }
+        public string Question { get; set; }
+    }
+    public class UpdateSecurityQuestionModel
+    {
         public string Id { get; set; }
         public string Question { get; set; }
     }

@@ -23,6 +23,7 @@ namespace Data.DataAccess
         public IMongoCollection<UiPermission> UiPermissions => _db.GetCollection<UiPermission>("uiPermissions");
 
         public IMongoCollection<ProvincialInformation> ProvincialInformation => _db.GetCollection<ProvincialInformation>("provincialInformation");
+                public IMongoCollection<SecurityQuestion> SecurityQuestions => _db.GetCollection<SecurityQuestion>("securityQuestions");
 
         public IClientSessionHandle StartSession()
         {

@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using Data.ViewModels;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 
@@ -18,8 +19,9 @@ namespace Data.MongoCollections
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
 
-        public string SecurityQuestionId { get; set; }
+        public SecurityQuestion SecurityQuestion { get; set; }
         public string SecurityQuestionAnswer { get; set; }
+        public OTP OTP { get; set; }
 
         public List<string> RoleIds { get; set; } = new List<string>();
         public List<string> GroupIds { get; set; } = new List<string>();

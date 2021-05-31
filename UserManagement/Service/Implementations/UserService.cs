@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using Service.Helper;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -24,13 +25,14 @@ namespace Service.Implementations
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
-
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory)
+        private readonly IMailService _mailService;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService)
         {
             _mapper = mapper;
             _configuration = configuration;
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
+            _mailService = mailService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -388,6 +390,11 @@ namespace Service.Implementations
                 }
                 else
                 {
+                    var otp = OTPHepler.GenerateOTP();
+
+                    user.OTP = otp;
+                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+
                     if (!string.IsNullOrEmpty(model.PhoneNumber))
                     {
                         if (user.PhoneNumber.Equals(model.PhoneNumber))
@@ -403,7 +410,13 @@ namespace Service.Implementations
                     {
                         if (user.Email.Equals(model.Email))
                         {
-                            result.Succeed = true;
+                            var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                            {
+                                To = user.Email,
+                                Subject = "Reset Password for USAID",
+                                Text = $"Follow this OTP to reset USAID password: {otp.Value}"
+                            });
+                            result.Succeed = isMailSent;
                         }
                         else
                         {
@@ -412,13 +425,13 @@ namespace Service.Implementations
                     }
                     else if (model.SecurityQuestion != null)
                     {
-                        if (string.IsNullOrEmpty(user.SecurityQuestionId))
+                        if (user.SecurityQuestion == null)
                         {
                             result.ErrorMessage = "User has no security question";
                         }
                         else
                         {
-                            if (model.SecurityQuestion.Id.Equals(user.SecurityQuestionId) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
+                            if (model.SecurityQuestion.Id.Equals(user.SecurityQuestion.Id) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
                             {
                                 result.Succeed = true;
                             }
@@ -446,12 +459,14 @@ namespace Service.Implementations
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
                 // 123456 is default
                 // check user.ResetPasswordOTP with OTP later
-                if (!model.OTP.Equals("123456"))
+
+                if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                 {
-                    result.ErrorMessage = "OTP is incorrect";
+                    result.ErrorMessage = "OTP is incorrect or expired";
                 }
                 else
                 {
+                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null));
                     var accessToken = GetAccessToken(user);
                     result.Data = accessToken;
                     result.Succeed = true;
@@ -464,16 +479,18 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<ResultModel> ResetPassword(ResetPasswordModel model)
+        public async Task<ResultModel> ResetPassword(ResetPasswordModel model, string username)
         {
             var result = new ResultModel();
             try
             {
-                //model.Username = model.Username.ToUpper();
-                //var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefault();
-                // check user.resetPasswordToken with resetPasswordModel.ResetPasswordToken later
-                // change user.Password to new password
-                result.Succeed = true;
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
+
+                var passwordHasher = new PasswordHasher<UserInformation>();
+                var update = await _dbContext.Users.UpdateOneAsync(i => i.NormalizedUsername == username, Builders<UserInformation>.Update.Set(x => x.HashedPassword, passwordHasher.HashPassword(user, model.NewPassword)));
+
+                result.Succeed = update.ModifiedCount == 1;
             }
             catch (Exception e)
             {

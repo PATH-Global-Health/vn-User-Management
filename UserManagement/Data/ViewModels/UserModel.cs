@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Data.ViewModels
@@ -74,5 +76,11 @@ namespace Data.ViewModels
     {
         public string Username { get; set; }
         public string OTP { get; set; }
+    }
+    public class OTP
+    {
+        public string Value { get; set; }
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
+        public DateTime ExpiredTime { get; set; }
     }
 }

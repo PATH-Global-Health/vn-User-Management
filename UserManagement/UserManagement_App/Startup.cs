@@ -1,5 +1,6 @@
 using AutoMapper;
 using Data.DataAccess;
+using Data.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,7 @@ namespace UserManagement_App
         {
             services.AddControllers();
             services.ConfigSwagger();
+            services.Configure<EmailSettings>(this.Configuration.GetSection("EmailSettings")) ;
             services.AddBusinessServices();
             services.ConfigCors();
             services.ConfigJwt(Configuration["Jwt:Key"], Configuration["Jwt:Issuer"], null);
