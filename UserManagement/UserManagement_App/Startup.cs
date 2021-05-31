@@ -1,4 +1,5 @@
 using AutoMapper;
+using Data.DataAccess;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -30,11 +31,13 @@ namespace UserManagement_App
             services.AddHttpClient();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                mongoDbContext.CreateCollectionsIfNotExists();
+                mongoDbContext.SeedData();
             }
             app.UseCors("AllowAll");
             app.UseHttpsRedirection();

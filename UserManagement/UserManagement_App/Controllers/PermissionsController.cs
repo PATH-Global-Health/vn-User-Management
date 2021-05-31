@@ -34,6 +34,14 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
+        [HttpPut("Resource")]
+        public IActionResult CreateResourcePermission([FromBody] ResourcePermissionCreateModel model)
+        {
+            ResultModel result = _permissionsService.CreatePermission(model);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
         [HttpDelete("Resource/{permissionId}")]
         public IActionResult RemoveResourcePermission(string permissionId, HolderType holderType, string holderId)
         {
@@ -59,10 +67,26 @@ namespace UserManagement_App.Controllers
         #endregion
 
         #region Ui 
+        [HttpGet("Ui")]
+        public IActionResult UiPermission()
+        {
+            var result = _permissionsService.GetAllUiPermission();
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
         [HttpPost("Ui")]
         public IActionResult AddUi([FromBody] AddUiPermissionModel model)
         {
             ResultModel result = _permissionsService.AddPermission(model.HolderId, model.HolderType, model.Permission);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPut("Ui")]
+        public IActionResult CreateUiPermission([FromBody] UiPermissionCreateModel model)
+        {
+            ResultModel result = _permissionsService.CreatePermission(model);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
@@ -75,13 +99,6 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpGet("Ui")]
-        public IActionResult UiPermission()
-        {
-            var result = _permissionsService.GetAllUiPermission();
-            if (result.Succeed) return Ok(result.Data);
-            return BadRequest(result.ErrorMessage);
-        }
         #endregion
 
     }

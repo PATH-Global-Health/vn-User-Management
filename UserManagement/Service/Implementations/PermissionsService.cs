@@ -50,18 +50,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<ResourcePermissionCreateModel, ResourcePermission>(model);
-                var existedPermission = user.ResourcePermissions.FirstOrDefault(i => i.PermissionType == model.PermissionType
-                                                                        && i.NormalizedUrl == model.Url.ToUpper().Trim()
-                                                                        && i.NormalizedMethod == model.Method.ToUpper().Trim());
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    user.ResourcePermissionIds.Add((string)createPermissionResult.Data);
 
-                user.ResourcePermissions.Add(newPermission);
-                _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -84,18 +83,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<ResourcePermissionCreateModel, ResourcePermission>(model);
-                var existedPermission = role.ResourcePermissions.FirstOrDefault(i => i.PermissionType == model.PermissionType
-                                                                        && i.NormalizedUrl == model.Url.ToUpper().Trim()
-                                                                        && i.NormalizedMethod == model.Method.ToUpper().Trim());
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    role.ResourcePermissionIds.Add((string)createPermissionResult.Data);
 
-                role.ResourcePermissions.Add(newPermission);
-                _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -118,18 +116,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<ResourcePermissionCreateModel, ResourcePermission>(model);
-                var existedPermission = group.ResourcePermissions.FirstOrDefault(i => i.PermissionType == model.PermissionType
-                                                                        && i.NormalizedUrl == model.Url.ToUpper().Trim()
-                                                                        && i.NormalizedMethod == model.Method.ToUpper().Trim());
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    group.ResourcePermissionIds.Add((string)createPermissionResult.Data);
 
-                group.ResourcePermissions.Add(newPermission);
-                _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -166,17 +163,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<UiPermissionCreateModel, UiPermission>(model);
-                var existedPermission = group.UiPermissions.FirstOrDefault(i => i.Type == model.PermissionType
-                                                                        && i.Code == model.Code);
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    group.UiPermissionIds.Add((string)createPermissionResult.Data);
 
-                group.UiPermissions.Add(newPermission);
-                _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -199,17 +196,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<UiPermissionCreateModel, UiPermission>(model);
-                var existedPermission = role.UiPermissions.FirstOrDefault(i => i.Type == model.PermissionType
-                                                                        && i.Code == model.Code);
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    role.UiPermissionIds.Add((string)createPermissionResult.Data);
 
-                role.UiPermissions.Add(newPermission);
-                _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -232,17 +229,17 @@ namespace Service.Implementations
                     return result;
                 }
 
-                var newPermission = _mapper.Map<UiPermissionCreateModel, UiPermission>(model);
-                var existedPermission = user.UiPermissions.FirstOrDefault(i => i.Type == model.PermissionType
-                                                                        && i.Code == model.Code);
-                if (existedPermission != null)
+                var createPermissionResult = CreatePermission(model);
+                if (createPermissionResult.Succeed)
                 {
-                    result.ErrorMessage = $"Permission existed with Id : {existedPermission.Id}";
-                    return result;
-                }
+                    user.UiPermissionIds.Add((string)createPermissionResult.Data);
 
-                user.UiPermissions.Add(newPermission);
-                _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    return createPermissionResult;
+                }
 
                 result.Succeed = true;
             }
@@ -278,11 +275,11 @@ namespace Service.Implementations
                 }
                 if (isResourcePermission)
                 {
-                    user.ResourcePermissions.RemoveAll(i => i.Id == permissionId);
+                    user.ResourcePermissionIds.Remove(permissionId);
                 }
                 else
                 {
-                    user.UiPermissions.RemoveAll(i => i.Id == permissionId);
+                    user.UiPermissionIds.Remove(permissionId);
                 }
 
                 _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
@@ -307,11 +304,11 @@ namespace Service.Implementations
                 }
                 if (isResourcePermission)
                 {
-                    group.ResourcePermissions.RemoveAll(i => i.Id == permissionId);
+                    group.ResourcePermissionIds.Remove(permissionId);
                 }
                 else
                 {
-                    group.UiPermissions.RemoveAll(i => i.Id == permissionId);
+                    group.UiPermissionIds.Remove(permissionId);
                 }
 
                 _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
@@ -336,11 +333,11 @@ namespace Service.Implementations
                 }
                 if (isResourcePermission)
                 {
-                    role.ResourcePermissions.RemoveAll(i => i.Id == permissionId);
+                    role.ResourcePermissionIds.Remove(permissionId);
                 }
                 else
                 {
-                    role.UiPermissions.RemoveAll(i => i.Id == permissionId);
+                    role.UiPermissionIds.Remove(permissionId);
                 }
 
                 _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
@@ -373,7 +370,11 @@ namespace Service.Implementations
                 var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
                 if (user != null)
                 {
-                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(user.ResourcePermissions);
+                    var permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, user.ResourcePermissionIds);
+
+                    var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(permissions);
                 }
                 else
                 {
@@ -394,7 +395,11 @@ namespace Service.Implementations
                 var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
                 if (group != null)
                 {
-                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(group.ResourcePermissions);
+                    var permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, group.ResourcePermissionIds);
+
+                    var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(permissions);
                 }
                 else
                 {
@@ -415,7 +420,11 @@ namespace Service.Implementations
                 var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
                 if (role != null)
                 {
-                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(role.ResourcePermissions);
+                    var permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, role.ResourcePermissionIds);
+
+                    var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(permissions);
                 }
                 else
                 {
@@ -450,7 +459,11 @@ namespace Service.Implementations
                 var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
                 if (user != null)
                 {
-                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(user.UiPermissions);
+                    var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
+
+                    var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(permissions);
                 }
                 else
                 {
@@ -471,7 +484,11 @@ namespace Service.Implementations
                 var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
                 if (group != null)
                 {
-                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(group.UiPermissions);
+                    var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, group.UiPermissionIds);
+
+                    var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(permissions);
                 }
                 else
                 {
@@ -492,7 +509,11 @@ namespace Service.Implementations
                 var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
                 if (role != null)
                 {
-                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(role.UiPermissions);
+                    var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, role.UiPermissionIds);
+
+                    var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(permissions);
                 }
                 else
                 {
@@ -539,8 +560,6 @@ namespace Service.Implementations
             }
             return result;
         }
-
-
         #endregion
 
         public ResultModel Validate(ResourcePermissionValidationModel model, string userId)
@@ -550,20 +569,24 @@ namespace Service.Implementations
             var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
             if (user != null)
             {
-                var validUri = SegmentsEqual(model.Uri.Segments.ToList(), new Uri(user.ResourcePermissions[2].NormalizedUrl).Segments.ToList());
 
-
-
-                Parallel.ForEach(Partitioner.Create(user.ResourcePermissions), (permission, state) =>
+                var _lock = new object();
+                Parallel.ForEach(Partitioner.Create(user.ResourcePermissionIds), (permissionId, state) =>
                 {
+                    var permission = _dbContext.ResourcePermissions.Find(i => i.Id == permissionId).FirstOrDefault();
+                    if (permission == null) return;
+
                     var validUri = SegmentsEqual(model.Uri.Segments.ToList(), new Uri(permission.NormalizedUrl).Segments.ToList());
                     var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
                     var allowedPermission = permission.PermissionType == PermissionType.Allow;
 
                     if (validUri && validMethod && allowedPermission)
                     {
-                        result.Succeed = true;
-                        state.Stop();
+                        lock (_lock)
+                        {
+                            result.Succeed = true;
+                            state.Stop();
+                        }
                     }
                 });
 
@@ -617,5 +640,45 @@ namespace Service.Implementations
 
             return segments;
         }
+
+        #region Create Permissions
+        public ResultModel CreatePermission(ResourcePermissionCreateModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var permission = _mapper.Map<ResourcePermissionCreateModel, ResourcePermission>(model);
+                var _ = _dbContext.ResourcePermissions.InsertOneAsync(permission);
+
+                result.Succeed = true;
+                result.Data = permission.Id;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
+
+        public ResultModel CreatePermission(UiPermissionCreateModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var permission = _mapper.Map<UiPermissionCreateModel, UiPermission>(model);
+                var _ = _dbContext.UiPermissions.InsertOneAsync(permission);
+
+                result.Succeed = true;
+                result.Data = permission.Id;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
+        #endregion
+
+
     }
 }
