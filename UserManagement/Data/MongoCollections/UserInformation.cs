@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace Data.MongoCollections
 {
+    [BsonIgnoreExtraElements]
     public class UserInformation
     {
         [BsonId]
