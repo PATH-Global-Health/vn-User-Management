@@ -25,13 +25,14 @@ namespace Service.Implementations
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
-
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory)
+        private readonly IMailService _mailService;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService)
         {
             _mapper = mapper;
             _configuration = configuration;
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
+            _mailService = mailService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -407,7 +408,13 @@ namespace Service.Implementations
                     {
                         if (user.Email.Equals(model.Email))
                         {
-                            result.Succeed = true;
+                            var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                            {
+                                To = user.Email,
+                                Subject = "Reset Password for USAID",
+                                Text = $"Follow this OTP to reset USAID password: {otp.Value}"
+                            });
+                            result.Succeed = isMailSent;
                         }
                         else
                         {

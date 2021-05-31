@@ -1,4 +1,5 @@
 ﻿using Data.DataAccess;
+using Data.ViewModels;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,6 +30,7 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IUserProfileService, UserProfileService>();
             services.AddScoped<IProvincialService, ProvincialService>();
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
+            services.AddScoped<IMailService, MailService>();
         }
 
         public static void ConfigSwagger(this IServiceCollection services)
@@ -101,5 +103,6 @@ namespace UserManagement_App.Extensions
             services.AddSingleton<IMongoClient>(s => new MongoClient(connectionString));
             services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(), dbName));
         }
+
     }
 }

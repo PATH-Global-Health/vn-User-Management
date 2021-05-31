@@ -10,7 +10,7 @@ namespace Service.Helper
             return new OTP()
             {
                 Value = new Random().Next(100000, 999999).ToString(),
-                ExpiredTime = DateTime.Now.AddSeconds(60),
+                ExpiredTime = DateTime.Now.AddMinutes(5),
             };
         }
 
