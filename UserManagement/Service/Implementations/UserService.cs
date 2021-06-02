@@ -423,13 +423,13 @@ namespace Service.Implementations
                     }
                     else if (model.SecurityQuestion != null)
                     {
-                        if (user.SecurityQuestion == null)
+                        if (string.IsNullOrEmpty(user.SecurityQuestionId))
                         {
                             result.ErrorMessage = "User has no security question";
                         }
                         else
                         {
-                            if (model.SecurityQuestion.Id.Equals(user.SecurityQuestion.Id) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
+                            if (model.SecurityQuestion.Id.Equals(user.Id) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
                             {
                                 result.Succeed = true;
                             }

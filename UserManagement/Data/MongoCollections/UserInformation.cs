@@ -18,8 +18,7 @@ namespace Data.MongoCollections
         public string NormalizedEmail { get; set; }
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
-
-        public SecurityQuestion SecurityQuestion { get; set; }
+        public string SecurityQuestionId { get; set; }
         public string SecurityQuestionAnswer { get; set; }
         public OTP OTP { get; set; }
 
