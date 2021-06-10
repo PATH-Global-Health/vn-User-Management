@@ -66,7 +66,6 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public AnswerSecurityQuestionModel SecurityQuestion { get; set; }
     }
     public class ResetPasswordModel
     {
@@ -76,6 +75,12 @@ namespace Data.ViewModels
     {
         public string Username { get; set; }
         public string OTP { get; set; }
+    }
+    public class ConfirmResetPasswordSecurityQuestionModel
+    {
+        public string Username { get; set; }
+        public string SecurityQuestionId { get; set; }
+        public string SecurityQuestionAnswer { get; set; }
     }
     public class OTP
     {

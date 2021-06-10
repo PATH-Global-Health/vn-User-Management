@@ -157,6 +157,15 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
+        [AllowAnonymous]
+        [HttpPost("ResetPassword/ConfirmSecurityQuestion")]
+        public async Task<IActionResult> ConfirmSecurityQuestion(ConfirmResetPasswordSecurityQuestionModel model)
+        {
+            var result = await _userService.ConfirmResetPasswordSecurityQuestion(model);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
         [Authorize]
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)

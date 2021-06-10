@@ -18,8 +18,10 @@ namespace Service.Interfaces
         ResultModel UpdateInformation(UserUpdateModel model, string userId);
         UserInformationModel GetUserInformation(string userId);
         ResultModel ImportUsers(List<ImportUserModel> model);
+
         Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model);
         Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model);
+        Task<ResultModel> ConfirmResetPasswordSecurityQuestion(ConfirmResetPasswordSecurityQuestionModel model);
         Task<ResultModel> ResetPassword(ResetPasswordModel model, string username);
 
         List<RoleModel> GetRoles(string userId);
