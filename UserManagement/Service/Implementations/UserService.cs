@@ -464,7 +464,7 @@ namespace Service.Implementations
             {
                 model.Username = model.Username.ToUpper();
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
-                if(user == null)
+                if (user == null)
                 {
                     result.ErrorMessage = "User does not exist";
                     return result;
@@ -476,7 +476,7 @@ namespace Service.Implementations
                 }
                 else
                 {
-                    if (model.SecurityQuestionId.Equals(user.Id) && model.SecurityQuestionAnswer.Equals(user.SecurityQuestionAnswer))
+                    if (model.SecurityQuestionId.Equals(user.SecurityQuestionId) && model.SecurityQuestionAnswer.Equals(user.SecurityQuestionAnswer))
                     {
                         var accessToken = GetAccessToken(user);
                         result.Data = accessToken;
@@ -515,6 +515,37 @@ namespace Service.Implementations
             return result;
         }
 
+        public async Task<ResultModel> ChangeSecurityQuestionAnswer(ChangeSecurityQuestionAnswerModel model, string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
 
+                var passwordHasher = new PasswordHasher<UserInformation>();
+                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
+                if (passwordVerificationResult == PasswordVerificationResult.Failed)
+                {
+                    result.ErrorMessage = "Password is incorrect";
+                    return result;
+                }
+                var securityQuestion = await _dbContext.SecurityQuestions.Find(x => x.Id == model.QuestionAnswer.Id).FirstOrDefaultAsync();
+                if (securityQuestion == null)
+                {
+                    result.ErrorMessage = "Security Question does not exist";
+                    return result;
+                }
+                await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.SecurityQuestionId, model.QuestionAnswer.Id)
+                    .Set(x => x.SecurityQuestionAnswer, model.QuestionAnswer.Answer));
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }

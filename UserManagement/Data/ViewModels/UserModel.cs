@@ -60,6 +60,7 @@ namespace Data.ViewModels
         public List<UiPermissionModel> UiPermissions { get; set; }
         public List<ResourcePermissionModel> ResourcePermissions { get; set; }
     }
+
     public class GenerateResetPasswordOTPModel
     {
         [Required]
@@ -87,5 +88,10 @@ namespace Data.ViewModels
         public string Value { get; set; }
         [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime ExpiredTime { get; set; }
+    }
+    public class ChangeSecurityQuestionAnswerModel
+    {
+        public string Password { get; set; }
+        public AnswerSecurityQuestionModel QuestionAnswer { get; set; }
     }
 }

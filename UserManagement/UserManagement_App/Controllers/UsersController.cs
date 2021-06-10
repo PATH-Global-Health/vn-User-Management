@@ -174,5 +174,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
+        [Authorize]
+        [HttpPost("ChangeSecurityQuestionAnswer")]
+        public async Task<IActionResult> ChangeSecurityQuestionAnswer([FromBody] ChangeSecurityQuestionAnswerModel model)
+        {
+            var result = await _userService.ChangeSecurityQuestionAnswer(model, User?.FindFirst("Username")?.Value);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }
