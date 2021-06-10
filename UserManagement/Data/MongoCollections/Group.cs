@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Data.MongoCollections
 {
+    [BsonIgnoreExtraElements]
     public class Group
     {
         [BsonId]
