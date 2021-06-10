@@ -423,24 +423,6 @@ namespace Service.Implementations
                             result.ErrorMessage = "Email does not match";
                         }
                     }
-                    else if (model.SecurityQuestion != null)
-                    {
-                        if (string.IsNullOrEmpty(user.SecurityQuestionId))
-                        {
-                            result.ErrorMessage = "User has no security question";
-                        }
-                        else
-                        {
-                            if (model.SecurityQuestion.Id.Equals(user.Id) && model.SecurityQuestion.Answer.Equals(user.SecurityQuestionAnswer))
-                            {
-                                result.Succeed = true;
-                            }
-                            else
-                            {
-                                result.ErrorMessage = "Security Question doesn't match";
-                            }
-                        }
-                    }
                 }
             }
             catch (Exception e)
@@ -457,8 +439,6 @@ namespace Service.Implementations
             {
                 model.Username = model.Username.ToUpper();
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
-                // 123456 is default
-                // check user.ResetPasswordOTP with OTP later
 
                 if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                 {
@@ -479,6 +459,44 @@ namespace Service.Implementations
             return result;
         }
 
+        public async Task<ResultModel> ConfirmResetPasswordSecurityQuestion(ConfirmResetPasswordSecurityQuestionModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                model.Username = model.Username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User does not exist";
+                    return result;
+                }
+
+                if (string.IsNullOrEmpty(user.SecurityQuestionId))
+                {
+                    result.ErrorMessage = "User has no security question";
+                }
+                else
+                {
+                    if (model.SecurityQuestionId.Equals(user.SecurityQuestionId) && model.SecurityQuestionAnswer.Equals(user.SecurityQuestionAnswer))
+                    {
+                        var accessToken = GetAccessToken(user);
+                        result.Data = accessToken;
+                        result.Succeed = true;
+                        result.Succeed = true;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Security Question doesn't match";
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
         public async Task<ResultModel> ResetPassword(ResetPasswordModel model, string username)
         {
             var result = new ResultModel();
@@ -491,6 +509,39 @@ namespace Service.Implementations
                 var update = await _dbContext.Users.UpdateOneAsync(i => i.NormalizedUsername == username, Builders<UserInformation>.Update.Set(x => x.HashedPassword, passwordHasher.HashPassword(user, model.NewPassword)));
 
                 result.Succeed = update.ModifiedCount == 1;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        public async Task<ResultModel> ChangeSecurityQuestionAnswer(ChangeSecurityQuestionAnswerModel model, string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
+
+                var passwordHasher = new PasswordHasher<UserInformation>();
+                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
+                if (passwordVerificationResult == PasswordVerificationResult.Failed)
+                {
+                    result.ErrorMessage = "Password is incorrect";
+                    return result;
+                }
+                var securityQuestion = await _dbContext.SecurityQuestions.Find(x => x.Id == model.QuestionAnswer.Id).FirstOrDefaultAsync();
+                if (securityQuestion == null)
+                {
+                    result.ErrorMessage = "Security Question does not exist";
+                    return result;
+                }
+                await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.SecurityQuestionId, model.QuestionAnswer.Id)
+                    .Set(x => x.SecurityQuestionAnswer, model.QuestionAnswer.Answer));
+
+                result.Succeed = true;
             }
             catch (Exception e)
             {

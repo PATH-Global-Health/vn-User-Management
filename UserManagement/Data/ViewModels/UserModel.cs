@@ -60,13 +60,13 @@ namespace Data.ViewModels
         public List<UiPermissionModel> UiPermissions { get; set; }
         public List<ResourcePermissionModel> ResourcePermissions { get; set; }
     }
+
     public class GenerateResetPasswordOTPModel
     {
         [Required]
         public string Username { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public AnswerSecurityQuestionModel SecurityQuestion { get; set; }
     }
     public class ResetPasswordModel
     {
@@ -77,10 +77,21 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string OTP { get; set; }
     }
+    public class ConfirmResetPasswordSecurityQuestionModel
+    {
+        public string Username { get; set; }
+        public string SecurityQuestionId { get; set; }
+        public string SecurityQuestionAnswer { get; set; }
+    }
     public class OTP
     {
         public string Value { get; set; }
         [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime ExpiredTime { get; set; }
+    }
+    public class ChangeSecurityQuestionAnswerModel
+    {
+        public string Password { get; set; }
+        public AnswerSecurityQuestionModel QuestionAnswer { get; set; }
     }
 }
