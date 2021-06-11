@@ -182,5 +182,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
+        [Authorize]
+        [HttpGet("GetUserInfo")]
+        public async Task<IActionResult> GetUserInfo()
+        {
+            var result = await _userService.GetUserInfoAsync(User?.FindFirst("Username")?.Value);
+            if (result.Succeed) return Ok(result);
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }

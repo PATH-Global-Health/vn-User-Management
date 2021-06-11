@@ -547,5 +547,23 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<ResultModel> GetUserInfoAsync(string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
+
+                result.Data = GetUserInformation(user.Id);
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }
