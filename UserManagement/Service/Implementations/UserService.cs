@@ -248,7 +248,9 @@ namespace Service.Implementations
             var permissions = new List<Permission>();
             if (permissionQuery.Type == "UiPermission")
             {
-                permissions = permissions.Union(user.UiPermissions.Select(s => new Permission { Code = s.Code })).ToList();
+                var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
+
+                permissions = _dbContext.UiPermissions.Find(permissionFilters).ToEnumerable().Select(i => new Permission { Code = i.Code }).ToList();
             }
             return permissions;
         }

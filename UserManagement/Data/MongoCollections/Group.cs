@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Data.MongoCollections
 {
+    [BsonIgnoreExtraElements]
     public class Group
     {
         [BsonId]
@@ -21,8 +22,8 @@ namespace Data.MongoCollections
         /// </summary>
         public List<string> RoleIds { get; set; } = new List<string>();
 
-        public List<UiPermission> UiPermissions { get; set; } = new List<UiPermission>();
-        public List<ResourcePermission> ResourcePermissions { get; set; } = new List<ResourcePermission>();
+        public List<string> UiPermissionIds { get; set; } = new List<string>();
+        public List<string> ResourcePermissionIds { get; set; } = new List<string>();
 
         [BsonDateTimeOptions]
         public DateTime DateCreated { get; set; } = DateTime.Now;
