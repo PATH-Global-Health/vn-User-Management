@@ -26,7 +26,6 @@ namespace Service.Interfaces
         Task<ResultModel> ResetPassword(ResetPasswordModel model, string username);
         Task<ResultModel> GetUserInfoAsync(string username);
 
-
         List<RoleModel> GetRoles(string userId);
         List<GroupModel> GetGroups(string userId);
     }

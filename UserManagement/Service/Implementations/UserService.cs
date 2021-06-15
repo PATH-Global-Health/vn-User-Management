@@ -196,7 +196,7 @@ namespace Service.Implementations
                     result.ErrorMessage = "Username or password is incorrect";
                     return result;
                 }
-                var accessToken = GetAccessToken(user);
+                var accessToken = GetAccessToken(user, permissionQuerie);
 
                 result.Data = accessToken;
                 result.Succeed = true;
@@ -557,8 +557,14 @@ namespace Service.Implementations
             {
                 username = username.ToUpper();
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    throw new Exception("User is not exist!");
+                }
+                var userInfo = _mapper.Map<UserInformation, UserInformationModel>(user);
+                var permissions = GetPermissions(new PermissionQuery() { Type = "UiPermission" }, user);
 
-                result.Data = GetUserInformation(user.Id);
+                result.Data = new UserInformationWithPermissionsModel() { Permissions = permissions, UserInfo = userInfo };
                 result.Succeed = true;
             }
             catch (Exception e)

@@ -94,4 +94,9 @@ namespace Data.ViewModels
         public string Password { get; set; }
         public AnswerSecurityQuestionModel QuestionAnswer { get; set; }
     }
+    public class UserInformationWithPermissionsModel
+    {
+        public UserInformationModel UserInfo { get; set; }
+        public List<Permission> Permissions { get; set; }
+    }
 }
