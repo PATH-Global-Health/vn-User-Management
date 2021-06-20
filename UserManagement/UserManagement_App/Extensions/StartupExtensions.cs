@@ -30,6 +30,7 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IProvincialService, ProvincialService>();
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
             services.AddScoped<IMailService, MailService>();
+            services.AddScoped<IApiModuleService, ApiModuleService>();
         }
 
         public static void ConfigSwagger(this IServiceCollection services)
