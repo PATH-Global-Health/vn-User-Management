@@ -41,24 +41,30 @@ namespace Data.ViewModels
 
     public class SwaggerDocument
     {
-        public IDictionary<string, PathItem> Paths;
+        public IDictionary<string, PathItem> Paths { get; set; }
+        public List<Server> Servers { get; set; }
+    }
+
+    public class Server
+    {
+        public string Url { get; set; }
     }
 
     public class PathItem
     {
-        public Operation Get;
+        public Operation Get { get; set; }
 
-        public Operation Put;
+        public Operation Put { get; set; }
 
-        public Operation Post;
+        public Operation Post { get; set; }
 
-        public Operation Delete;
+        public Operation Delete { get; set; }
 
-        public Operation Options;
+        public Operation Options { get; set; }
 
-        public Operation Head;
+        public Operation Head { get; set; }
 
-        public Operation Patch;
+        public Operation Patch { get; set; }
 
     }
 

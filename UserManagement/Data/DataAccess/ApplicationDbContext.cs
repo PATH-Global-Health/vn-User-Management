@@ -25,7 +25,7 @@ namespace Data.DataAccess
         public IMongoCollection<ProvincialInformation> ProvincialInformation => _db.GetCollection<ProvincialInformation>("provincialInformation");
         public IMongoCollection<SecurityQuestion> SecurityQuestions => _db.GetCollection<SecurityQuestion>("securityQuestions");
 
-        public IMongoCollection<ApiModule> ApiModules => _db.GetCollection<ApiModule>("apiModels");
+        public IMongoCollection<ApiModule> ApiModules => _db.GetCollection<ApiModule>("apiModules");
 
 
         public IClientSessionHandle StartSession()
@@ -38,9 +38,9 @@ namespace Data.DataAccess
         {
             var collectionNames = _db.ListCollectionNames().ToList();
 
-            if (!collectionNames.Any(name => name == "apiModels"))
+            if (!collectionNames.Any(name => name == "apiModules"))
             {
-                _db.CreateCollection("apiModels");
+                _db.CreateCollection("apiModules");
             }
             if (!collectionNames.Any(name => name == "groups"))
             {
@@ -72,7 +72,6 @@ namespace Data.DataAccess
 
         public void SeedData()
         {
-
         }
     }
 }

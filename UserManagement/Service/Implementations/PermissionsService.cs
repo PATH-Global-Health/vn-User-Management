@@ -29,6 +29,12 @@ namespace Service.Implementations
         public ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model)
         {
             ResultModel result = new ResultModel();
+            if (!IsValidApiPath(model.Url))
+            {
+                result.ErrorMessage = "Invalid path";
+                return result;
+            }
+
             switch (holder)
             {
                 case HolderType.User: result = AddUserPermission(holderId, model); break;
@@ -576,7 +582,7 @@ namespace Service.Implementations
                     var permission = _dbContext.ResourcePermissions.Find(i => i.Id == permissionId).FirstOrDefault();
                     if (permission == null) return;
 
-                    var validUri = SegmentsEqual(model.Uri.Segments.ToList(), new Uri(permission.NormalizedUrl).Segments.ToList());
+                    var validUri = SegmentsEqual(GetSegments(model.ApiPath), GetSegments(permission.NormalizedUrl));
                     var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
                     var allowedPermission = permission.PermissionType == PermissionType.Allow;
 
@@ -594,6 +600,12 @@ namespace Service.Implementations
             }
 
             return result;
+        }
+
+        private List<string> GetSegments(string apiPath)
+        {
+            var segments = apiPath.Split("/").ToList();
+            return segments;
         }
 
         private bool SegmentsEqual(List<string> segment1, List<string> segment2)
@@ -639,6 +651,16 @@ namespace Service.Implementations
             }
 
             return segments;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="apiPath"></param>
+        /// <returns>true if input format follows : /{something}/{anything}/{everything}/....</returns>
+        private bool IsValidApiPath(string apiPath)
+        {
+            return Uri.TryCreate(apiPath, UriKind.Relative, out var _);
         }
 
         #region Create Permissions
