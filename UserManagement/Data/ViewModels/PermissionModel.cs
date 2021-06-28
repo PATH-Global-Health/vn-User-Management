@@ -22,6 +22,9 @@ namespace Data.ViewModels
         public string Name { get; set; }
         public string Description { get; set; }
 
+        /// <summary>
+        /// Format sample : /api/{path1}/{path2}
+        /// </summary>
         public string Url { get; set; }
         public string Method { get; set; }
         public PermissionType PermissionType { get; set; }
@@ -62,8 +65,10 @@ namespace Data.ViewModels
 
     public class ResourcePermissionValidationModel
     {
-        public string Url { get; set; }
+        /// <summary>
+        /// Sample Format : /api/{path1}/{path2}/...
+        /// </summary>
+        public string ApiPath { get; set; }
         public string Method { get; set; }
-        public Uri Uri { get; set; }
     }
 }
