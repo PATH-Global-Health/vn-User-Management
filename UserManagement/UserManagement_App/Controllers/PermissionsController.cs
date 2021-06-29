@@ -1,5 +1,6 @@
 ﻿using Data.Enums;
 using Data.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using UserManagement_App.Extensions;
@@ -8,6 +9,7 @@ namespace UserManagement_App.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PermissionsController : ControllerBase
     {
         private readonly IPermissionsService _permissionsService;

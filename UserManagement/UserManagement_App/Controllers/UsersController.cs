@@ -23,7 +23,6 @@ namespace UserManagement_App.Controllers
             _permissionService = permissionService;
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -166,7 +165,6 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [Authorize]
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
         {
@@ -174,7 +172,6 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
-        [Authorize]
         [HttpPost("ChangeSecurityQuestionAnswer")]
         public async Task<IActionResult> ChangeSecurityQuestionAnswer([FromBody] ChangeSecurityQuestionAnswerModel model)
         {
@@ -182,7 +179,6 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
-        [Authorize]
         [HttpGet("GetUserInfo")]
         public async Task<IActionResult> GetUserInfo()
         {

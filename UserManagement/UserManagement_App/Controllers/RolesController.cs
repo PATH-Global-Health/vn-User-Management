@@ -1,4 +1,5 @@
 ﻿using Data.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -6,6 +7,7 @@ namespace UserManagement_App.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;
