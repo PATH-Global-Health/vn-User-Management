@@ -178,5 +178,60 @@ namespace Service.Implementations
 
             return _mapper.Map<ApiModule, ApiModuleDetailModel>(module);
         }
+
+        public async Task<ResultModel> GetSwaggerDocument(string swaggerHost, string serverUrl)
+        {
+            var result = new ResultModel();
+            try
+            {
+                #region Validate swaggerHost
+                if (string.IsNullOrEmpty(swaggerHost))
+                {
+                    result.ErrorMessage = "Invalid host name"; return result;
+                }
+
+                swaggerHost = swaggerHost.Trim();
+                if (swaggerHost.Contains(" "))
+                {
+                    result.ErrorMessage = "Host cannot have white spaces"; return result;
+                }
+                var lastChar = swaggerHost.ElementAt(swaggerHost.Length - 1);
+                if (lastChar == '/')
+                {
+                    swaggerHost = swaggerHost.Remove(swaggerHost.Length - 1);
+                }
+                #endregion
+
+                using (var httpClient = _httpClientFactory.CreateClient())
+                {
+                    var responseMessage = await httpClient.GetAsync(swaggerHost + "/swagger/v1/swagger.json");
+
+                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        var swaggerDocumentJson = await responseMessage.Content.ReadAsStringAsync();
+                        var swaggerDocument = JsonConvert.DeserializeObject<dynamic>(swaggerDocumentJson);
+
+                        //Set serverUrl
+                        swaggerDocument.servers[0].url = serverUrl;
+                        swaggerDocumentJson = JsonConvert.SerializeObject(swaggerDocument);
+
+                        result.Succeed = true;
+                        result.Data = swaggerDocumentJson;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Status Code : " + responseMessage.StatusCode + " on host : " + swaggerHost;
+                        return null;
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+
+            return result;
+        }
     }
 }

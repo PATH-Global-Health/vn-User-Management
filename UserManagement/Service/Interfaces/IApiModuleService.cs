@@ -1,5 +1,4 @@
 ﻿using Data.ViewModels;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Service.Interfaces
@@ -9,5 +8,6 @@ namespace Service.Interfaces
         PagingModel GetAll(int pageSize, int pageIndex);
         ApiModuleDetailModel GetDetail(string id);
         Task<ResultModel> Create(string apiHost, string moduleName, string upstreamName);
+        Task<ResultModel> GetSwaggerDocument(string swaggerHost, string serverUrl);
     }
 }

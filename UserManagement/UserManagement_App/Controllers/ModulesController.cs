@@ -32,6 +32,14 @@ namespace UserManagement_App.Controllers
             return Ok(result);
         }
 
+        [HttpGet("Document")]
+        public async Task<IActionResult> GetDocument(string swaggerHost, string serverUrl)
+        {
+            var result = await _apiModuleService.GetSwaggerDocument(swaggerHost, serverUrl);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
         [HttpGet("{id}")]
         public IActionResult Get([FromRoute] Guid id)
         {
