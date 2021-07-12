@@ -180,7 +180,7 @@ namespace Service.Implementations
             return _mapper.Map<ApiModule, ApiModuleDetailModel>(module);
         }
 
-        public async Task<ResultModel> GetSwaggerDocument(string swaggerHost, string serverUrl)
+        public async Task<ResultModel> GetSwaggerDocument(string swaggerHost, string serverUrl, bool removeApiPathPrefix)
         {
             var result = new ResultModel();
             try
@@ -216,21 +216,24 @@ namespace Service.Implementations
                         swaggerDocument.servers[0].url = serverUrl;
 
 
-                        #region  Modify api Path (**Disable this if want to keep prefix '/api' in the path**)
-                        //define variables
-                        var rawPathsObject = swaggerDocument.paths as JObject;
-                        var paths = rawPathsObject.ToObject<IDictionary<string, dynamic>>();
-                        var modifiedPaths = new Dictionary<string, dynamic>();
-
-                        //Modifying
-                        foreach (var item in paths)
+                        #region  Modify api Path 
+                        if (removeApiPathPrefix)
                         {
-                            modifiedPaths.Add(item.Key.Replace("/api", ""), item.Value);
-                        }
+                            //define variables
+                            var rawPathsObject = swaggerDocument.paths as JObject;
+                            var paths = rawPathsObject.ToObject<IDictionary<string, dynamic>>();
+                            var modifiedPaths = new Dictionary<string, dynamic>();
 
-                        //Set to swagger document object
-                        rawPathsObject = JObject.FromObject(modifiedPaths);
-                        swaggerDocument.paths = rawPathsObject;
+                            //Modifying
+                            foreach (var item in paths)
+                            {
+                                modifiedPaths.Add(item.Key.Replace("/api", ""), item.Value);
+                            }
+
+                            //Set to swagger document object
+                            rawPathsObject = JObject.FromObject(modifiedPaths);
+                            swaggerDocument.paths = rawPathsObject;
+                        }
                         #endregion
 
                         swaggerDocumentJson = JsonConvert.SerializeObject(swaggerDocument);

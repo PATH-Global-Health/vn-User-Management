@@ -33,9 +33,9 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpGet("Document")]
-        public async Task<IActionResult> GetDocument(string swaggerHost, string serverUrl)
+        public async Task<IActionResult> GetDocument(string swaggerHost, string serverUrl, bool removeApiPathPrefix = false)
         {
-            var result = await _apiModuleService.GetSwaggerDocument(swaggerHost, serverUrl);
+            var result = await _apiModuleService.GetSwaggerDocument(swaggerHost, serverUrl, removeApiPathPrefix);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
