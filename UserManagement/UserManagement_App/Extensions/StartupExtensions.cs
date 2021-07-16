@@ -1,6 +1,9 @@
 ﻿using Data.DataAccess;
 using Data.ViewModels;
+using Data.ViewModels.FacebookAuths;
+using Data.ViewModels.GoogleAuths;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +23,7 @@ namespace UserManagement_App.Extensions
 {
     public static class StartupExtensions
     {
-        public static void AddBusinessServices(this IServiceCollection services)
+        public static void AddBusinessServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IGroupService, GroupService>();
@@ -31,6 +34,17 @@ namespace UserManagement_App.Extensions
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
             services.AddScoped<IMailService, MailService>();
             services.AddScoped<IApiModuleService, ApiModuleService>();
+
+            var facebookAuthSettings = new FacebookAuthSettings();
+            configuration.Bind(nameof(FacebookAuthSettings), facebookAuthSettings);
+            services.AddSingleton(facebookAuthSettings);
+            services.AddTransient<IFacebookAuthService, FacebookAuthService>();
+
+            var googleAuthSettings = new GoogleAuthSettings();
+            configuration.Bind(nameof(GoogleAuthSettings), googleAuthSettings);
+            services.AddSingleton(googleAuthSettings);
+            services.AddTransient<IGoogleAuthService, GoogleAuthService>();
+
         }
 
         public static void ConfigSwagger(this IServiceCollection services)

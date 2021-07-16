@@ -186,5 +186,36 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result);
             return BadRequest(result.ErrorMessage);
         }
+
+        [AllowAnonymous]
+        [HttpPost("LoginWithFacebook")]
+        public async Task<IActionResult> LoginWithFacebook([FromQuery] string accessToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.LoginWithFacebookAsync(accessToken);
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
+        [AllowAnonymous]
+        [HttpPost("LoginWithGoogle")]
+        public async Task<IActionResult> LoginWithFacebookLoginWithGoogle([FromQuery] string accessToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.LoginWithGoogleAsync(accessToken);
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
     }
 }

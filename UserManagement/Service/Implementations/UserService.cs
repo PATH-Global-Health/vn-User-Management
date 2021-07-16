@@ -25,14 +25,18 @@ namespace Service.Implementations
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IFacebookAuthService _facebookAuthService;
+        private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService)
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService)
         {
             _mapper = mapper;
             _configuration = configuration;
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
             _mailService = mailService;
+            _facebookAuthService = facebookAuthService;
+            _googleAuthService = googleAuthService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -572,6 +576,95 @@ namespace Service.Implementations
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
             }
             return result;
+        }
+        public async Task<ResultModel> LoginWithFacebookAsync(string accessToken)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var userInfo = await _facebookAuthService.GetUserInfoResult(accessToken);
+                if (userInfo == null)
+                {
+                    result.ErrorMessage = "AccessToken Failed";
+                    return result;
+                }
+                var user = await _dbContext.Users.Find(i => i.Email == userInfo.email).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    var userCreateModel = new UserCreateModel
+                    {
+                        Username = "fb." + userInfo.id,
+                        Password = userInfo.id,
+                        FullName = userInfo.name,
+                        Email = userInfo.email ?? ""
+                    };
+                    var createUserResult = Create(userCreateModel);
+                    if (createUserResult.Succeed)
+                    {
+                        var newUserId = createUserResult.Data as string;
+                        user = await _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefaultAsync();
+                    }
+                    else
+                    {
+                        result = createUserResult;
+                        return result;
+                    }
+                }
+                result.Succeed = true;
+                result.Data = GetAccessToken(user, new PermissionQuery() { Type = "UiPermission" }); ;
+                return result;
+            }
+            catch (Exception e)
+            {
+                result.Succeed = false;
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+                return result;
+            }
+        }
+
+        public async Task<ResultModel> LoginWithGoogleAsync(string idToken)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var userInfo = await _googleAuthService.GetUserInfoResult(idToken);
+                if (userInfo == null)
+                {
+                    result.ErrorMessage = "AccessToken Failed";
+                    return result;
+                }
+                var user = await _dbContext.Users.Find(i => i.Email == userInfo.Email).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    var userCreateModel = new UserCreateModel
+                    {
+                        Username = "google." + userInfo.Subject,
+                        Password = userInfo.Subject,
+                        FullName = userInfo.Name ?? userInfo.Email,
+                        Email = userInfo.Email ?? ""
+                    };
+                    var createUserResult = Create(userCreateModel);
+                    if (createUserResult.Succeed)
+                    {
+                        var newUserId = createUserResult.Data as string;
+                        user = await _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefaultAsync();
+                    }
+                    else
+                    {
+                        result = createUserResult;
+                        return result;
+                    }
+                }
+                result.Succeed = true;
+                result.Data = GetAccessToken(user, new PermissionQuery() { Type = "UiPermission" });
+                return result;
+            }
+            catch (Exception e)
+            {
+                result.Succeed = false;
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+                return result;
+            }
         }
     }
 }

@@ -28,5 +28,7 @@ namespace Service.Interfaces
 
         List<RoleModel> GetRoles(string userId);
         List<GroupModel> GetGroups(string userId);
+        Task<ResultModel> LoginWithFacebookAsync(string accessToken);
+        Task<ResultModel> LoginWithGoogleAsync(string idToken);
     }
 }

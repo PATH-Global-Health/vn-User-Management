@@ -23,8 +23,8 @@ namespace UserManagement_App
         {
             services.AddControllers();
             services.ConfigSwagger();
-            services.Configure<EmailSettings>(this.Configuration.GetSection("EmailSettings")) ;
-            services.AddBusinessServices();
+            services.Configure<EmailSettings>(this.Configuration.GetSection("EmailSettings"));
+            services.AddBusinessServices(Configuration);
             services.ConfigCors();
             services.ConfigJwt(Configuration["Jwt:Key"], Configuration["Jwt:Issuer"], null);
             services.AddMongoDbContext(Configuration["MongoDbSettings:ConnectionString"], Configuration["MongoDbSettings:DatabaseName"]);
