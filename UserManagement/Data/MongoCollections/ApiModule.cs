@@ -20,6 +20,7 @@ namespace Data.MongoCollections
         public List<ApiPath> Paths { get; set; } = new List<ApiPath>();
 
         public bool IsDeleted { get; set; }
+        public string RawSwaggerDocument { get; set; }
     }
 
     public class ApiPath
@@ -34,5 +35,6 @@ namespace Data.MongoCollections
         public DateTime DateUpdated { get; set; } = DateTime.Now;
 
         public bool IsDeleted { get; set; }
+        public List<string> PermissionIds { get; set; } = new List<string>();
     }
 }

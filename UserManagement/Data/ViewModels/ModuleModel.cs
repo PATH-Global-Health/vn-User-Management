@@ -34,9 +34,9 @@ namespace Data.ViewModels
 
     public class ModuleCreateModel
     {
-        public string Host { get; set; }
+        public string SwaggerHost { get; set; }
+        public string ReplacementHost { get; set; }
         public string ModuleName { get; set; }
-        public string UpstreamName { get; set; }
     }
 
     public class SwaggerDocument
