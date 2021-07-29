@@ -32,9 +32,9 @@ namespace UserManagement_App.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Create([FromBody] UserCreateModel model)
+        public async Task<IActionResult> CreateAsync([FromBody] UserCreateModel model)
         {
-            var result = _userService.Create(model);
+            var result = await _userService.Create(model);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }

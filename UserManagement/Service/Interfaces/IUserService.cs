@@ -11,7 +11,7 @@ namespace Service.Interfaces
         bool IsPhoneNumberAvailable(string phoneNumber);
 
         List<UserInformationModel> GetAll();
-        ResultModel Create(UserCreateModel model);
+        Task<ResultModel> Create(UserCreateModel model);
         Task<ResultModel> Login(string username, string password, PermissionQuery permissionQuerie);
         ResultModel ChangePassword(ChangePasswordModel model, string userId);
         ResultModel ResetDefaultPassword(string username);

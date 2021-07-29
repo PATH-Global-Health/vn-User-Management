@@ -2,6 +2,7 @@
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
+using Data.ViewModels.ProfileAPIs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +29,8 @@ namespace Service.Implementations
         private readonly IFacebookAuthService _facebookAuthService;
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService)
+        private readonly IScheduleManagementAPIService _scheduleManagementAPIService;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, IScheduleManagementAPIService scheduleManagementAPIService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -37,6 +39,7 @@ namespace Service.Implementations
             _mailService = mailService;
             _facebookAuthService = facebookAuthService;
             _googleAuthService = googleAuthService;
+            _scheduleManagementAPIService = scheduleManagementAPIService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -70,7 +73,7 @@ namespace Service.Implementations
             return result;
         }
 
-        public ResultModel Create(UserCreateModel model)
+        public async Task<ResultModel> Create(UserCreateModel model)
         {
             var result = new ResultModel();
             try
@@ -106,6 +109,16 @@ namespace Service.Implementations
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
 
                 _dbContext.Users.InsertOne(user);
+
+                // Create Profile when register successfully
+                var token = GetAccessToken(user);
+                await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
+                {
+                    email = user.Email,
+                    phoneNumber = user.PhoneNumber,
+                    fullname = user.FullName
+                });
+
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -169,7 +182,7 @@ namespace Service.Implementations
                             Password = password,
                             FullName = username
                         };
-                        var createUserResult = Create(userCreateModel);
+                        var createUserResult = await Create(userCreateModel);
                         if (createUserResult.Succeed)
                         {
                             var newUserId = createUserResult.Data as string;
@@ -598,7 +611,7 @@ namespace Service.Implementations
                         FullName = userInfo.name,
                         Email = userInfo.email ?? ""
                     };
-                    var createUserResult = Create(userCreateModel);
+                    var createUserResult = await Create(userCreateModel);
                     if (createUserResult.Succeed)
                     {
                         var newUserId = createUserResult.Data as string;
@@ -643,7 +656,7 @@ namespace Service.Implementations
                         FullName = userInfo.Name ?? userInfo.Email,
                         Email = userInfo.Email ?? ""
                     };
-                    var createUserResult = Create(userCreateModel);
+                    var createUserResult = await Create(userCreateModel);
                     if (createUserResult.Succeed)
                     {
                         var newUserId = createUserResult.Data as string;

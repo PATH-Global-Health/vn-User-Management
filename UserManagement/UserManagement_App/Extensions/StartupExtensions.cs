@@ -35,6 +35,8 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IMailService, MailService>();
             services.AddScoped<IApiModuleService, ApiModuleService>();
 
+            services.AddTransient<IScheduleManagementAPIService, ScheduleManagementAPIService>();
+
             var facebookAuthSettings = new FacebookAuthSettings();
             configuration.Bind(nameof(FacebookAuthSettings), facebookAuthSettings);
             services.AddSingleton(facebookAuthSettings);
@@ -44,6 +46,7 @@ namespace UserManagement_App.Extensions
             configuration.Bind(nameof(GoogleAuthSettings), googleAuthSettings);
             services.AddSingleton(googleAuthSettings);
             services.AddTransient<IGoogleAuthService, GoogleAuthService>();
+
 
         }
 
