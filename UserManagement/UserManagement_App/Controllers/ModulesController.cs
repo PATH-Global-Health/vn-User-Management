@@ -18,9 +18,9 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] ModuleCreateModel model)
+        public async Task<IActionResult> Post([FromBody] ModuleCreateModel model, bool doPathReplacement = true)
         {
-            var result = await _apiModuleService.Create(model.Host, model.ModuleName, model.UpstreamName);
+            var result = await _apiModuleService.Create(model.SwaggerHost, model.ReplacementHost, model.ModuleName, doPathReplacement);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
@@ -32,18 +32,18 @@ namespace UserManagement_App.Controllers
             return Ok(result);
         }
 
-        [HttpGet("Document")]
-        public async Task<IActionResult> GetDocument(string swaggerHost, string serverUrl, bool removeApiPathPrefix = false)
-        {
-            var result = await _apiModuleService.GetSwaggerDocument(swaggerHost, serverUrl, removeApiPathPrefix);
-            if (result.Succeed) return Ok(result.Data);
-            return BadRequest(result.ErrorMessage);
-        }
-
         [HttpGet("{id}")]
         public IActionResult Get([FromRoute] Guid id)
         {
             var result = _apiModuleService.GetDetail(id.ToString());
+            if (result != null) return Ok(result);
+            return BadRequest("Record not existed");
+        }
+
+        [HttpGet("{id}/SwaggerDocument")]
+        public async Task<IActionResult> GetSwaggerDocument([FromRoute] Guid id)
+        {
+            var result = await _apiModuleService.GetSwaggerDocument(id.ToString());
             if (result != null) return Ok(result);
             return BadRequest("Record not existed");
         }
