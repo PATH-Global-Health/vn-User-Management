@@ -2,6 +2,7 @@
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
+using Data.ViewModels.ProfileAPIs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +29,8 @@ namespace Service.Implementations
         private readonly IFacebookAuthService _facebookAuthService;
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService)
+        private readonly IScheduleManagementAPIService _scheduleManagementAPIService;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, IScheduleManagementAPIService scheduleManagementAPIService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -37,6 +39,7 @@ namespace Service.Implementations
             _mailService = mailService;
             _facebookAuthService = facebookAuthService;
             _googleAuthService = googleAuthService;
+            _scheduleManagementAPIService = scheduleManagementAPIService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -70,7 +73,7 @@ namespace Service.Implementations
             return result;
         }
 
-        public ResultModel Create(UserCreateModel model)
+        public async Task<ResultModel> Create(UserCreateModel model)
         {
             var result = new ResultModel();
             try
@@ -106,6 +109,16 @@ namespace Service.Implementations
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
 
                 _dbContext.Users.InsertOne(user);
+
+                // Create Profile when register successfully
+                var token = GetAccessToken(user);
+                await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
+                {
+                    email = user.Email,
+                    phoneNumber = user.PhoneNumber,
+                    fullname = user.FullName
+                });
+
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -151,25 +164,28 @@ namespace Service.Implementations
             return user == null;
         }
 
-        public async Task<ResultModel> Login(string username, string password, PermissionQuery permissionQuerie)
+        public async Task<ResultModel> Login(LoginModel model)
         {
             var result = new ResultModel();
             try
             {
-                username = username.ToUpper();
-                var user = _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefault();
+                model.Username = model.Username.ToUpper();
+                model.Email = model.Email?.ToUpper();
+                var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username
+                || i.NormalizedEmail == model.Email
+                || i.PhoneNumber == model.PhoneNumber).FirstOrDefault();
                 if (user == null)
                 {
                     #region Check on old system **Disabled**
-                    if (await UserIsOnOldLoginSystem(username, password))
+                    if (await UserIsOnOldLoginSystem(model.Username, model.Password))
                     {
                         var userCreateModel = new UserCreateModel
                         {
-                            Username = username,
-                            Password = password,
-                            FullName = username
+                            Username = model.Username,
+                            Password = model.Password,
+                            FullName = model.Username
                         };
-                        var createUserResult = Create(userCreateModel);
+                        var createUserResult = await Create(userCreateModel);
                         if (createUserResult.Succeed)
                         {
                             var newUserId = createUserResult.Data as string;
@@ -194,13 +210,13 @@ namespace Service.Implementations
                     #endregion
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
-                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, password);
+                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
                 {
                     result.ErrorMessage = "Username or password is incorrect";
                     return result;
                 }
-                var accessToken = GetAccessToken(user, permissionQuerie);
+                var accessToken = GetAccessToken(user, model.PermissionQuery);
 
                 result.Data = accessToken;
                 result.Succeed = true;
@@ -598,7 +614,7 @@ namespace Service.Implementations
                         FullName = userInfo.name,
                         Email = userInfo.email ?? ""
                     };
-                    var createUserResult = Create(userCreateModel);
+                    var createUserResult = await Create(userCreateModel);
                     if (createUserResult.Succeed)
                     {
                         var newUserId = createUserResult.Data as string;
@@ -643,7 +659,7 @@ namespace Service.Implementations
                         FullName = userInfo.Name ?? userInfo.Email,
                         Email = userInfo.Email ?? ""
                     };
-                    var createUserResult = Create(userCreateModel);
+                    var createUserResult = await Create(userCreateModel);
                     if (createUserResult.Succeed)
                     {
                         var newUserId = createUserResult.Data as string;

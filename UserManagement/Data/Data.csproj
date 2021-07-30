@@ -9,7 +9,6 @@
     <PackageReference Include="MongoDB.Bson" Version="2.11.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Constants\" />
     <Folder Include="DataAccess\" />
     <Folder Include="Enums\" />
   </ItemGroup>
