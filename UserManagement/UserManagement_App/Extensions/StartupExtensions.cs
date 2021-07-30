@@ -14,7 +14,9 @@ using Service.Implementations;
 using Service.Interfaces;
 using Service.RabbitMQ;
 using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -67,6 +69,7 @@ namespace UserManagement_App.Extensions
                 document.OperationProcessors.Add(
                     new AspNetCoreOperationSecurityScopeProcessor("JWT"));
                 document.AllowReferencesWithProperties = true;
+
             });
         }
 

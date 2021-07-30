@@ -164,23 +164,26 @@ namespace Service.Implementations
             return user == null;
         }
 
-        public async Task<ResultModel> Login(string username, string password, PermissionQuery permissionQuerie)
+        public async Task<ResultModel> Login(LoginModel model)
         {
             var result = new ResultModel();
             try
             {
-                username = username.ToUpper();
-                var user = _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefault();
+                model.Username = model.Username.ToUpper();
+                model.Email = model.Email.ToUpper();
+                var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username
+                || i.NormalizedEmail == model.Email
+                || i.PhoneNumber == model.PhoneNumber).FirstOrDefault();
                 if (user == null)
                 {
                     #region Check on old system **Disabled**
-                    if (await UserIsOnOldLoginSystem(username, password))
+                    if (await UserIsOnOldLoginSystem(model.Username, model.Password))
                     {
                         var userCreateModel = new UserCreateModel
                         {
-                            Username = username,
-                            Password = password,
-                            FullName = username
+                            Username = model.Username,
+                            Password = model.Password,
+                            FullName = model.Username
                         };
                         var createUserResult = await Create(userCreateModel);
                         if (createUserResult.Succeed)
@@ -207,13 +210,13 @@ namespace Service.Implementations
                     #endregion
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
-                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, password);
+                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
                 {
                     result.ErrorMessage = "Username or password is incorrect";
                     return result;
                 }
-                var accessToken = GetAccessToken(user, permissionQuerie);
+                var accessToken = GetAccessToken(user, model.PermissionQuery);
 
                 result.Data = accessToken;
                 result.Succeed = true;

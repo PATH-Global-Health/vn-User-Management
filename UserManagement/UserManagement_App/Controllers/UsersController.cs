@@ -29,7 +29,9 @@ namespace UserManagement_App.Controllers
             var users = _userService.GetAll();
             return Ok(users);
         }
-
+        /// <summary>
+        /// If Creating User Successfully, A Profile of user will be created
+        /// </summary>
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> CreateAsync([FromBody] UserCreateModel model)
@@ -43,7 +45,7 @@ namespace UserManagement_App.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var result = await _userService.Login(model.Username, model.Password, model.PermissionQuery);
+            var result = await _userService.Login(model);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
@@ -204,13 +206,13 @@ namespace UserManagement_App.Controllers
         }
         [AllowAnonymous]
         [HttpPost("LoginWithGoogle")]
-        public async Task<IActionResult> LoginWithFacebookLoginWithGoogle([FromQuery] string accessToken)
+        public async Task<IActionResult> LoginWithFacebookLoginWithGoogle([FromQuery] string idToken)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
-            var login = await _userService.LoginWithGoogleAsync(accessToken);
+            var login = await _userService.LoginWithGoogleAsync(idToken);
             if (login.Succeed)
             {
                 return Ok(login.Data);
