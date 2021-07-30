@@ -170,7 +170,7 @@ namespace Service.Implementations
             try
             {
                 model.Username = model.Username.ToUpper();
-                model.Email = model.Email.ToUpper();
+                model.Email = model.Email?.ToUpper();
                 var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username
                 || i.NormalizedEmail == model.Email
                 || i.PhoneNumber == model.PhoneNumber).FirstOrDefault();
