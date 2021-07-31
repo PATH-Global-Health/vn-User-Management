@@ -17,6 +17,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace Service.Implementations
 {
@@ -169,11 +170,21 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-                model.Username = model.Username.ToUpper();
-                model.Email = model.Email?.ToUpper();
-                var user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username
-                || i.NormalizedEmail == model.Email
-                || i.PhoneNumber == model.PhoneNumber).FirstOrDefault();
+                UserInformation user = null;
+                if (!string.IsNullOrEmpty(model.Email))
+                {
+                    model.Email = model.Email?.ToUpper();
+                    user = _dbContext.Users.Find(i => i.NormalizedEmail == model.Email).FirstOrDefault();
+                }
+                else if (!string.IsNullOrEmpty(model.PhoneNumber))
+                {
+                    user = _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefault();
+                }
+                else if (!string.IsNullOrEmpty(model.Username))
+                {
+                    model.Username = model.Username?.ToUpper();
+                    user = _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefault();
+                }
                 if (user == null)
                 {
                     #region Check on old system **Disabled**
@@ -402,48 +413,40 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-                model.Username = model.Username.ToUpper();
-                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
-                if (user == null)
+                var otp = OTPHepler.GenerateOTP();
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
                 {
-                    result.ErrorMessage = "Username is incorrect";
-                }
-                else
-                {
-                    var otp = OTPHepler.GenerateOTP();
-
-                    user.OTP = otp;
-                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, otp));
-
-                    if (!string.IsNullOrEmpty(model.PhoneNumber))
+                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.PhoneNumber == model.PhoneNumber,
+                        Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    if (updateResult.ModifiedCount != 0)
                     {
-                        if (user.PhoneNumber.Equals(model.PhoneNumber))
-                        {
-                            result.Succeed = true;
-                        }
-                        else
-                        {
-                            result.ErrorMessage = "Phone Number does not match";
-                        }
+                        result.Succeed = true;
                     }
-                    else if (!string.IsNullOrEmpty(model.Email))
+                    else
                     {
-                        if (user.Email.Equals(model.Email))
-                        {
-                            var isMailSent = await _mailService.SendEmail(new EmailViewModel()
-                            {
-                                To = user.Email,
-                                Subject = "Reset Password for USAID",
-                                Text = $"Follow this OTP to reset USAID password: {otp.Value}"
-                            });
-                            result.Succeed = isMailSent;
-                        }
-                        else
-                        {
-                            result.ErrorMessage = "Email does not match";
-                        }
+                        result.ErrorMessage = "Phone Number does not match";
                     }
                 }
+                else if (!string.IsNullOrEmpty(model.Email))
+                {
+                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Email == model.Email,
+                      Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    if (updateResult.ModifiedCount != 0)
+                    {
+                        var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                        {
+                            To = model.Email,
+                            Subject = "Reset Password for USAID",
+                            Text = $"Follow this OTP to reset USAID password: {otp.Value}"
+                        });
+                        result.Succeed = isMailSent;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Email does not match";
+                    }
+                }
+
             }
             catch (Exception e)
             {
@@ -457,19 +460,44 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-                model.Username = model.Username.ToUpper();
-                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == model.Username).FirstOrDefaultAsync();
 
-                if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
                 {
-                    result.ErrorMessage = "OTP is incorrect or expired";
+                    var user = await _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefaultAsync();
+                    if (user == null)
+                    {
+                        result.ErrorMessage = "PhoneNumber does not exist";
+                    }
+                    else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    {
+                        result.ErrorMessage = "OTP is incorrect or expired";
+                    }
+                    else
+                    {
+                        await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null));
+                        var accessToken = GetAccessToken(user);
+                        result.Data = accessToken;
+                        result.Succeed = true;
+                    }
                 }
-                else
+                else if (!string.IsNullOrEmpty(model.Email))
                 {
-                    await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null));
-                    var accessToken = GetAccessToken(user);
-                    result.Data = accessToken;
-                    result.Succeed = true;
+                    var user = await _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefaultAsync();
+                    if (user == null)
+                    {
+                        result.ErrorMessage = "Email does not exist";
+                    }
+                    else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    {
+                        result.ErrorMessage = "OTP is incorrect or expired";
+                    }
+                    else
+                    {
+                        await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null));
+                        var accessToken = GetAccessToken(user);
+                        result.Data = accessToken;
+                        result.Succeed = true;
+                    }
                 }
             }
             catch (Exception e)
