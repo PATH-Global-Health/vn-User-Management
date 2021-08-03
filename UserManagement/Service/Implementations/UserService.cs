@@ -632,7 +632,7 @@ namespace Service.Implementations
                     result.ErrorMessage = "AccessToken Failed";
                     return result;
                 }
-                var user = await _dbContext.Users.Find(i => i.Email == userInfo.email).FirstOrDefaultAsync();
+                var user = await _dbContext.Users.Find(i => i.Email == userInfo.email || i.Username == "fb." + userInfo.id).FirstOrDefaultAsync();
                 if (user == null)
                 {
                     var userCreateModel = new UserCreateModel
@@ -677,7 +677,7 @@ namespace Service.Implementations
                     result.ErrorMessage = "AccessToken Failed";
                     return result;
                 }
-                var user = await _dbContext.Users.Find(i => i.Email == userInfo.Email).FirstOrDefaultAsync();
+                var user = await _dbContext.Users.Find(i => i.Email == userInfo.Email || i.Username == "google." + userInfo.Subject).FirstOrDefaultAsync();
                 if (user == null)
                 {
                     var userCreateModel = new UserCreateModel
