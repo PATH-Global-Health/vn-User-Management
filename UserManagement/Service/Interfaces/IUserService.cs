@@ -1,4 +1,5 @@
 ﻿using Data.ViewModels;
+using Data.ViewModels.Users;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,6 +20,8 @@ namespace Service.Interfaces
         UserInformationModel GetUserInformation(string userId);
         ResultModel ImportUsers(List<ImportUserModel> model);
 
+        Task<ResultModel> SendOTPVerification(string email);
+        Task<ResultModel> VerifyEmailOTP(VerifyEmailOTPRequest request);
         Task<ResultModel> ChangeSecurityQuestionAnswer(ChangeSecurityQuestionAnswerModel model, string username);
         Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model);
         Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model);

@@ -1,4 +1,5 @@
 ﻿using Data.ViewModels;
+using Data.ViewModels.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
@@ -213,6 +214,38 @@ namespace UserManagement_App.Controllers
                 return BadRequest();
             }
             var login = await _userService.LoginWithGoogleAsync(idToken);
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("SendOTPVerification")]
+        public async Task<IActionResult> SendOTPVerification(string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.SendOTPVerification(email);
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("VerifyEmailOTP")]
+        public async Task<IActionResult> VerifyEmailOTP([FromBody] VerifyEmailOTPRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.VerifyEmailOTP(request);
             if (login.Succeed)
             {
                 return Ok(login.Data);

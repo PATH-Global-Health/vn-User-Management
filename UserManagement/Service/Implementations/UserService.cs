@@ -3,6 +3,7 @@ using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
 using Data.ViewModels.ProfileAPIs;
+using Data.ViewModels.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -187,38 +188,48 @@ namespace Service.Implementations
                 }
                 if (user == null)
                 {
-                    #region Check on old system **Disabled**
-                    if (await UserIsOnOldLoginSystem(model.Username, model.Password))
-                    {
-                        var userCreateModel = new UserCreateModel
-                        {
-                            Username = model.Username,
-                            Password = model.Password,
-                            FullName = model.Username
-                        };
-                        var createUserResult = await Create(userCreateModel);
-                        if (createUserResult.Succeed)
-                        {
-                            var newUserId = createUserResult.Data as string;
-                            user = _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefault();
-                        }
-                        else
-                        {
-                            result = createUserResult;
-                            return result;
-                        }
-                    }
-                    else
-                    {
-                        result.ErrorMessage = "Username or password is incorrect";
-                        return result;
-                    }
-                    #endregion
+                    //#region Check on old system **Disabled**
+                    //if (await UserIsOnOldLoginSystem(model.Username, model.Password))
+                    //{
+                    //    var userCreateModel = new UserCreateModel
+                    //    {
+                    //        Username = model.Username,
+                    //        Password = model.Password,
+                    //        FullName = model.Username
+                    //    };
+                    //    var createUserResult = await Create(userCreateModel);
+                    //    if (createUserResult.Succeed)
+                    //    {
+                    //        var newUserId = createUserResult.Data as string;
+                    //        user = _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefault();
+                    //    }
+                    //    else
+                    //    {
+                    //        result = createUserResult;
+                    //        return result;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    result.ErrorMessage = "Username or password is incorrect";
+                    //    return result;
+                    //}
+                    //#endregion
 
                     #region Don't check on old system
-                    //result.ErrorMessage = "Username or password is incorrect";
-                    //return result;
+                    result.ErrorMessage = "Username or password is incorrect";
+                    return result;
                     #endregion
+                }
+                if (string.IsNullOrEmpty(user.Email))
+                {
+                    result.ErrorMessage = "Please enter email for this account and verity by email to get high security";
+                    return result;
+                }
+                if (!user.EmailConfirmed)
+                {
+                    result.ErrorMessage = "Please verify account by email";
+                    return result;
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
@@ -709,6 +720,85 @@ namespace Service.Implementations
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
                 return result;
             }
+        }
+
+        public async Task<ResultModel> SendOTPVerification(string email)
+        {
+            var result = new ResultModel();
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    result.ErrorMessage = "Please enter email for this account and verity by email to get high security";
+                    return result;
+                }
+                var users = await _dbContext.Users.FindAsync(x => x.Email == email);
+                var user = await users.FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "User does not exist";
+                }
+                else
+                {
+
+                    var otp = OTPHepler.GenerateOTP();
+                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Email == email,
+                      Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    if (updateResult.ModifiedCount != 0)
+                    {
+                        var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                        {
+                            To = email,
+                            Subject = "USAID Verification Code",
+                            Text = $"The verification code is: {otp.Value}"
+                        });
+                        result.Succeed = isMailSent;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Email does not match";
+                    }
+                    result.Succeed = true;
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        public async Task<ResultModel> VerifyEmailOTP(VerifyEmailOTPRequest request)
+        {
+            var result = new ResultModel();
+            try
+            {
+                if (!string.IsNullOrEmpty(request.Email))
+                {
+                    var users = await _dbContext.Users.FindAsync(x => x.Email == request.Email);
+                    var user = await users.FirstOrDefaultAsync();
+                    if (user == null)
+                    {
+                        result.ErrorMessage = "User does not exist";
+                    }
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
+                    {
+                        result.ErrorMessage = "OTP is incorrect or expired";
+                    }
+                    else
+                    {
+                        await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.EmailConfirmed, true));
+
+                        result.Succeed = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
         }
     }
 }

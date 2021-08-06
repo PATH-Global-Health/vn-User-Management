@@ -21,6 +21,7 @@ namespace Data.MongoCollections
         public string SecurityQuestionId { get; set; }
         public string SecurityQuestionAnswer { get; set; }
         public OTP OTP { get; set; }
+        public bool EmailConfirmed { get; set; }
 
         public List<string> RoleIds { get; set; } = new List<string>();
         public List<string> GroupIds { get; set; } = new List<string>();
