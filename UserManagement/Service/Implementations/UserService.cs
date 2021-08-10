@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
@@ -83,7 +84,7 @@ namespace Service.Implementations
                 #region Keys validation
                 if (!IsUsernameAvailable(model.Username))
                 {
-                    result.ErrorMessage = "Username is not available";
+                    result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
                     return result;
                 }
                 if (!IsEmailAvailable(model.Email))
@@ -92,17 +93,17 @@ namespace Service.Implementations
                     if (checkVerifiedUser != null && !checkVerifiedUser.EmailConfirmed)
                     {
                         await SendOTPVerification(checkVerifiedUser.Email);
-                        result.ErrorMessage = "Enter OTP have sent to your email to verify account";
+                        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
                     }
                     else
                     {
-                        result.ErrorMessage = "Email is not available";
+                        result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                     }
                     return result;
                 }
                 if (!IsPhoneNumberAvailable(model.PhoneNumber))
                 {
-                    result.ErrorMessage = "Phone Number is not available";
+                    result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                     return result;
                 }
                 #endregion
@@ -226,7 +227,7 @@ namespace Service.Implementations
                     //#endregion
 
                     #region Don't check on old system
-                    result.ErrorMessage = "Username or password is incorrect";
+                    result.ErrorMessage = ErrorConstants.INCORRECT_USERNAME_PASSWORD;
                     return result;
                     #endregion
                 }
@@ -238,14 +239,14 @@ namespace Service.Implementations
                 if (!user.EmailConfirmed)
                 {
                     await SendOTPVerification(user.Email);
-                    result.ErrorMessage = "Enter OTP have sent to your email to verify account";
+                    result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
                     return result;
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
                 {
-                    result.ErrorMessage = "Username or password is incorrect";
+                    result.ErrorMessage = ErrorConstants.INCORRECT_USERNAME_PASSWORD;
                     return result;
                 }
                 var accessToken = GetAccessToken(user, model.PermissionQuery);
