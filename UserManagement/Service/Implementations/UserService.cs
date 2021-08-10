@@ -88,7 +88,16 @@ namespace Service.Implementations
                 }
                 if (!IsEmailAvailable(model.Email))
                 {
-                    result.ErrorMessage = "Email is not available";
+                    var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
+                    if (checkVerifiedUser != null && !checkVerifiedUser.EmailConfirmed)
+                    {
+                        await SendOTPVerification(checkVerifiedUser.Email);
+                        result.ErrorMessage = "Enter OTP have sent to your email to verify account";
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Email is not available";
+                    }
                     return result;
                 }
                 if (!IsPhoneNumberAvailable(model.PhoneNumber))
@@ -228,7 +237,8 @@ namespace Service.Implementations
                 }
                 if (!user.EmailConfirmed)
                 {
-                    result.ErrorMessage = "Please verify account by email";
+                    await SendOTPVerification(user.Email);
+                    result.ErrorMessage = "Enter OTP have sent to your email to verify account";
                     return result;
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
