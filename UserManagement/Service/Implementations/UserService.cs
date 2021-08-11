@@ -82,23 +82,31 @@ namespace Service.Implementations
             try
             {
                 #region Keys validation
-                if (!IsUsernameAvailable(model.Username))
-                {
-                    result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
-                    return result;
-                }
                 if (!IsEmailAvailable(model.Email))
                 {
                     var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
                     if (checkVerifiedUser != null && !checkVerifiedUser.EmailConfirmed)
                     {
-                        await SendOTPVerification(checkVerifiedUser.Email);
-                        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                        if (CheckValidUnverifiedAccount(checkVerifiedUser))
+                        {
+                            await SendOTPVerification(checkVerifiedUser.Email);
+                            result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                            return result;
+                        }
+                        else
+                        {
+                            await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == checkVerifiedUser.Id);
+                        }
                     }
                     else
                     {
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
+                        return result;
                     }
+                }
+                if (!IsUsernameAvailable(model.Username))
+                {
+                    result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
                     return result;
                 }
                 if (!IsPhoneNumberAvailable(model.PhoneNumber))
@@ -122,6 +130,7 @@ namespace Service.Implementations
 
                 _dbContext.Users.InsertOne(user);
 
+                await SendOTPVerification(user.Email);
                 // Create Profile when register successfully
                 var token = GetAccessToken(user);
                 await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
@@ -141,7 +150,11 @@ namespace Service.Implementations
 
             return result;
         }
-
+        private bool CheckValidUnverifiedAccount(UserInformation user)
+        {
+            var time = DateTime.Now.Subtract(user.DateUpdated).Subtract(TimeSpan.FromHours(7));
+            return time <= TimeSpan.FromMinutes(5);
+        }
         public UserInformationModel GetUserInformation(string userId)
         {
             var user = _dbContext.Users.Find(u => u.Id == userId).FirstOrDefault();
