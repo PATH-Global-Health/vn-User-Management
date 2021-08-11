@@ -240,7 +240,7 @@ namespace Service.Implementations
                     //#endregion
 
                     #region Don't check on old system
-                    result.ErrorMessage = ErrorConstants.INCORRECT_USERNAME_PASSWORD;
+                    result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
                     return result;
                     #endregion
                 }
@@ -251,9 +251,18 @@ namespace Service.Implementations
                 }
                 if (!user.EmailConfirmed)
                 {
-                    await SendOTPVerification(user.Email);
-                    result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
-                    return result;
+                    if (CheckValidUnverifiedAccount(user))
+                    {
+                        await SendOTPVerification(user.Email);
+                        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                        return result;
+                    }
+                    else
+                    {
+                        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == user.Id);
+                        result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
+                        return result;
+                    }
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
