@@ -52,13 +52,13 @@ namespace Service.RabbitMQ
                 consumer = new EventingBasicConsumer(channel);
                 channel.BasicConsume(queue: "CreateAccount2",
                   autoAck: false, consumer: consumer);
-            _logger.LogInformation("-RabbitMQ queue created: CreateAccount2");
+                _logger.LogInformation("-RabbitMQ queue created: CreateAccount2");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "RabbitMQ queue create fail.");
             }
-            
+
 
         }
 
@@ -84,7 +84,7 @@ namespace Service.RabbitMQ
                     }
                     else
                     {
-                        response = "Success";
+                        response = result.Data.ToString();
                     }
                 }
                 catch (Exception e)
