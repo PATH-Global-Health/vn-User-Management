@@ -46,13 +46,13 @@ namespace Service.RabbitMQ
                 connection = factory.CreateConnection();
                 channel = connection.CreateModel();
 
-                channel.QueueDeclare(queue: "CreateAccount2", durable: false,
+                channel.QueueDeclare(queue: "CreateAccount5", durable: false,
                   exclusive: false, autoDelete: false, arguments: null);
-                channel.BasicQos(0, 1, false);
+                //channel.BasicQos(0, 1, false);
                 consumer = new EventingBasicConsumer(channel);
-                channel.BasicConsume(queue: "CreateAccount2",
+                channel.BasicConsume(queue: "CreateAccount5",
                   autoAck: false, consumer: consumer);
-                _logger.LogInformation("-RabbitMQ queue created: CreateAccount2");
+                _logger.LogInformation("-RabbitMQ queue created: CreateAccount");
             }
             catch (Exception e)
             {
@@ -89,7 +89,11 @@ namespace Service.RabbitMQ
                 }
                 catch (Exception e)
                 {
-                    response = e.Message;
+                    var result = new ResultModel();
+                    result.Succeed = false;
+                    result.ErrorMessage = e.InnerException != null ? e.InnerException.Message + "\n" + e.StackTrace : e.Message + "\n" + e.StackTrace;
+                    response = JsonConvert.SerializeObject(result);
+
                 }
                 finally
                 {

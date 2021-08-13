@@ -252,5 +252,21 @@ namespace UserManagement_App.Controllers
             }
             return BadRequest(login.ErrorMessage);
         }
+
+        [AllowAnonymous]
+        [HttpPost("AnonymousLogin")]
+        public async Task<IActionResult> AnonymousLogin()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.AnonymousLogin();
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
     }
 }

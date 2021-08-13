@@ -125,21 +125,22 @@ namespace Service.Implementations
                     NormalizedEmail = string.IsNullOrEmpty(model.Email) ? "" : model.Email.ToUpper(),
                     PhoneNumber = model.PhoneNumber,
                     FullName = model.FullName,
+                    EmailConfirmed = model.IsEmailConfirmed,
                 };
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
-
                 _dbContext.Users.InsertOne(user);
-
-                await SendOTPVerification(user.Email);
-                // Create Profile when register successfully
-                var token = GetAccessToken(user);
-                await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
+                if (!model.IsEmailConfirmed)
                 {
-                    email = user.Email,
-                    phoneNumber = user.PhoneNumber,
-                    fullname = user.FullName
-                });
-
+                    await SendOTPVerification(user.Email);
+                    // Create Profile when register successfully
+                    var token = GetAccessToken(user);
+                    await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
+                    {
+                        email = user.Email,
+                        phoneNumber = user.PhoneNumber,
+                        fullname = user.FullName
+                    });
+                }
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -244,11 +245,6 @@ namespace Service.Implementations
                     return result;
                     #endregion
                 }
-                if (string.IsNullOrEmpty(user.Email))
-                {
-                    result.ErrorMessage = "Please enter email for this account and verity by email to get high security";
-                    return result;
-                }
                 if (!user.EmailConfirmed)
                 {
                     if (CheckValidUnverifiedAccount(user))
@@ -283,7 +279,30 @@ namespace Service.Implementations
             return result;
 
         }
+        public async Task<ResultModel> AnonymousLogin()
+        {
+            var guid = await CreateAnonymousAccount();
+            return await Login(new LoginModel
+            {
+                Password = guid,
+                Username = guid,
+            });
+        }
+        private async Task<string> CreateAnonymousAccount()
+        {
 
+            var guid = Guid.NewGuid().ToString();
+            var passwordHasher = new PasswordHasher<UserInformation>();
+            var user = new UserInformation
+            {
+                Username = guid,
+                NormalizedUsername = guid.ToUpper(),
+                EmailConfirmed = true,
+            };
+            user.HashedPassword = passwordHasher.HashPassword(user, guid);
+            await _dbContext.Users.InsertOneAsync(user);
+            return guid;
+        }
         private async Task<bool> UserIsOnOldLoginSystem(string username, string password)
         {
             var httpClient = _httpClientFactory.CreateClient();
@@ -333,9 +352,9 @@ namespace Service.Implementations
         private List<Claim> GetClaims(UserInformation user)
         {
             var claims = new List<Claim> {
-                new Claim("Id",user.Id),
-                new Claim("Email", user.Email),
-                new Claim("FullName", user.FullName),
+                new Claim("Id", user.Id),
+                new Claim("Email", user.Email??""),
+                new Claim("FullName", user.FullName??""),
                 new Claim("Username",user.Username)
             };
 
