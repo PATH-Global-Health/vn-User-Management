@@ -1,17 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Service.Interfaces;
 using Data.ViewModels;
-using Service.Implementations;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -46,13 +42,13 @@ namespace Service.RabbitMQ
                 connection = factory.CreateConnection();
                 channel = connection.CreateModel();
 
-                channel.QueueDeclare(queue: "CreateAccount5", durable: false,
+                channel.QueueDeclare(queue: "CreateAccount8", durable: false,
                   exclusive: false, autoDelete: false, arguments: null);
-                //channel.BasicQos(0, 1, false);
+                channel.BasicQos(0, 1, false);
                 consumer = new EventingBasicConsumer(channel);
-                channel.BasicConsume(queue: "CreateAccount5",
+                channel.BasicConsume(queue: "CreateAccount8",
                   autoAck: false, consumer: consumer);
-                _logger.LogInformation("-RabbitMQ queue created: CreateAccount");
+                _logger.LogInformation("-RabbitMQ queue created: CreateAccount6");
             }
             catch (Exception e)
             {
@@ -65,7 +61,7 @@ namespace Service.RabbitMQ
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             stoppingToken.ThrowIfCancellationRequested();
-            consumer.Received += async (model, ea) =>
+            consumer.Received += (model, ea) =>
             {
                 string response = null;
 
@@ -77,15 +73,17 @@ namespace Service.RabbitMQ
                 try
                 {
                     var message = Encoding.UTF8.GetString(body);
-                    var result = await RegisterAccountAsync(message);
-                    if (result.Succeed == false)
-                    {
-                        response = result.ErrorMessage;
-                    }
-                    else
-                    {
-                        response = result.Data.ToString();
-                    }
+                    var result = RegisterAccount(message);
+                    //if (result.Succeed == false)
+                    //{
+                    //    response = JsonConvert.SerializeObject( result.ErrorMessage);
+                    //}
+                    //else
+                    //{
+                    //    response = JsonConvert.SerializeObject( result.Data.ToString());
+                    //}
+                    response = JsonConvert.SerializeObject(result);
+
                 }
                 catch (Exception e)
                 {
@@ -93,7 +91,6 @@ namespace Service.RabbitMQ
                     result.Succeed = false;
                     result.ErrorMessage = e.InnerException != null ? e.InnerException.Message + "\n" + e.StackTrace : e.Message + "\n" + e.StackTrace;
                     response = JsonConvert.SerializeObject(result);
-
                 }
                 finally
                 {
@@ -108,13 +105,14 @@ namespace Service.RabbitMQ
             return Task.CompletedTask;
         }
 
-        private async Task<ResultModel> RegisterAccountAsync(string message)
+        private ResultModel RegisterAccount(string message)
         {
             var messageAccountDTO = JsonConvert.DeserializeObject<UserCreateModel>(message);
             using (var scope = _scopeFactory.CreateScope())
             {
                 IUserService _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-                return await _userService.Create(messageAccountDTO);
+                var result = _userService.Create(messageAccountDTO).Result;
+                return result;
             }
         }
     }
