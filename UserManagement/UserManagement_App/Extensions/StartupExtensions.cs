@@ -31,7 +31,7 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IPermissionsService, PermissionsService>();
-            services.AddSingleton<IHostedService, Consumer>();
+            services.AddHostedService<Consumer>();
             services.AddScoped<IProvincialService, ProvincialService>();
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
             services.AddScoped<IMailService, MailService>();
@@ -48,7 +48,7 @@ namespace UserManagement_App.Extensions
             configuration.Bind(nameof(GoogleAuthSettings), googleAuthSettings);
             services.AddSingleton(googleAuthSettings);
             services.AddTransient<IGoogleAuthService, GoogleAuthService>();
-
+            
 
         }
 

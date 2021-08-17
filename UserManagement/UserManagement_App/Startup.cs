@@ -1,11 +1,13 @@
 using AutoMapper;
 using Data.DataAccess;
 using Data.ViewModels;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Service.RabbitMQ;
 using UserManagement_App.Extensions;
 
 namespace UserManagement_App
@@ -31,6 +33,7 @@ namespace UserManagement_App
             services.AddAutoMapper();
             services.AddLogging();
             services.AddHttpClient();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext)
