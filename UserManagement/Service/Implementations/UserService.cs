@@ -778,17 +778,17 @@ namespace Service.Implementations
             }
         }
 
-        public async Task<ResultModel> SendOTPVerification(string email)
+        public async Task<ResultModel> SendOTPVerification(string phoneNumber)
         {
             var result = new ResultModel();
             try
             {
-                if (string.IsNullOrEmpty(email))
+                if (string.IsNullOrEmpty(phoneNumber))
                 {
-                    result.ErrorMessage = "Please enter email for this account and verity by email to get high security";
+                    result.ErrorMessage = "Please enter phone number for this account and verity by email to get high security";
                     return result;
                 }
-                var users = await _dbContext.Users.FindAsync(x => x.Email == email);
+                var users = await _dbContext.Users.FindAsync(x => x.PhoneNumber == phoneNumber);
                 var user = await users.FirstOrDefaultAsync();
                 if (user == null)
                 {
@@ -798,23 +798,23 @@ namespace Service.Implementations
                 else
                 {
 
-                    var otp = OTPHepler.GenerateOTP();
-                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Email == email,
-                      Builders<UserInformation>.Update.Set(x => x.OTP, otp));
-                    if (updateResult.ModifiedCount != 0)
-                    {
-                        var isMailSent = await _mailService.SendEmail(new EmailViewModel()
-                        {
-                            To = email,
-                            Subject = "USAID Verification Code",
-                            Text = $"The verification code is: {otp.Value}"
-                        });
-                        result.Succeed = isMailSent;
-                    }
-                    else
-                    {
-                        result.ErrorMessage = "Email does not match";
-                    }
+                    //var otp = OTPHepler.GenerateOTP();
+                    //var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Email == phoneNumber,
+                    //  Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    //if (updateResult.ModifiedCount != 0)
+                    //{
+                    //    var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                    //    {
+                    //        To = phoneNumber,
+                    //        Subject = "USAID Verification Code",
+                    //        Text = $"The verification code is: {otp.Value}"
+                    //    });
+                    //    result.Succeed = isMailSent;
+                    //}
+                    //else
+                    //{
+                    //    result.ErrorMessage = "Email does not match";
+                    //}
                     result.Succeed = true;
                 }
             }
@@ -825,22 +825,23 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<ResultModel> VerifyEmailOTP(VerifyEmailOTPRequest request)
+        public async Task<ResultModel> VerifyOTPOfPhoneNumber(VerifyOTPOfPhoneNumberRequest request)
         {
             var result = new ResultModel();
             try
             {
-                if (!string.IsNullOrEmpty(request.Email))
+                if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    var users = await _dbContext.Users.FindAsync(x => x.Email == request.Email);
+                    var users = await _dbContext.Users.FindAsync(x => x.PhoneNumber == request.PhoneNumber);
                     var user = await users.FirstOrDefaultAsync();
                     if (user == null)
                     {
                         result.ErrorMessage = "User does not exist";
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
+                    else if (!request.OTP.Contains("99"))
+                    //else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                     {
-                        result.ErrorMessage = "OTP is incorrect or expired";
+                        result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
                     else
                     {

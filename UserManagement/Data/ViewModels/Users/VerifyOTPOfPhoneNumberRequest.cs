@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Data.ViewModels.Users
 {
-    public class VerifyEmailOTPRequest
+    public class VerifyOTPOfPhoneNumberRequest
     {
-        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
         public string OTP { get; set; }
     }
 }

@@ -223,13 +223,13 @@ namespace UserManagement_App.Controllers
 
         [AllowAnonymous]
         [HttpPost("SendOTPVerification")]
-        public async Task<IActionResult> SendOTPVerification(string email)
+        public async Task<IActionResult> SendOTPVerification(string phoneNumber)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
-            var login = await _userService.SendOTPVerification(email);
+            var login = await _userService.SendOTPVerification(phoneNumber);
             if (login.Succeed)
             {
                 return Ok(login.Data);
@@ -238,14 +238,14 @@ namespace UserManagement_App.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("VerifyEmailOTP")]
-        public async Task<IActionResult> VerifyEmailOTP([FromBody] VerifyEmailOTPRequest request)
+        [HttpPost("VerifyOTPOfPhoneNumber")]
+        public async Task<IActionResult> VerifyOTPOfPhoneNumber([FromBody] VerifyOTPOfPhoneNumberRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
-            var login = await _userService.VerifyEmailOTP(request);
+            var login = await _userService.VerifyOTPOfPhoneNumber(request);
             if (login.Succeed)
             {
                 return Ok(login.Data);
