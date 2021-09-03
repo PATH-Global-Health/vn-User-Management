@@ -248,21 +248,21 @@ namespace Service.Implementations
                     return result;
                     #endregion
                 }
-                if (!user.IsConfirmed)
-                {
-                    if (CheckValidUnverifiedAccount(user))
-                    {
-                        await SendOTPVerification(user.Email);
-                        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
-                        return result;
-                    }
-                    else
-                    {
-                        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == user.Id);
-                        result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
-                        return result;
-                    }
-                }
+                //if (!user.IsConfirmed)
+                //{
+                //    if (CheckValidUnverifiedAccount(user))
+                //    {
+                //        await SendOTPVerification(user.Email);
+                //        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                //        return result;
+                //    }
+                //    else
+                //    {
+                //        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == user.Id);
+                //        result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
+                //        return result;
+                //    }
+                //}
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
