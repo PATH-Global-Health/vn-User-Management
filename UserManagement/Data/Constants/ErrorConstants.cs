@@ -12,8 +12,10 @@ namespace Data.Constants
         public const string EXISTED_USERNAME = "EXISTED_USERNAME";
         public const string EXISTED_EMAIL = "EXISTED_EMAIL";
         public const string EXISTED_PHONENUMBER = "EXISTED_PHONENUMBER";
+        public const string NOT_EXISTED_PHONENUMBER = "NOT_EXISTED_PHONENUMBER";
         public const string INCORRECT_USERNAME_PASSWORD = "INCORRECT_USERNAME_PASSWORD";
         public const string NOT_EXIST_ACCOUNT = "NOT_EXIST_ACCOUNT";
         public const string REQUIRED_PHONE_NUMBER = "REQUIRED_PHONE_NUMBER";
+        public const string INCORRECT_OTP = "INCORRECT_OTP";
     }
 }

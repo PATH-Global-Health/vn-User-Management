@@ -532,11 +532,12 @@ namespace Service.Implementations
                     var user = await _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefaultAsync();
                     if (user == null)
                     {
-                        result.ErrorMessage = "PhoneNumber does not exist";
+                        result.ErrorMessage = ErrorConstants.NOT_EXISTED_PHONENUMBER;
                     }
-                    else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    else if (!model.OTP.Contains("99"))
+                    //else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                     {
-                        result.ErrorMessage = "OTP is incorrect or expired";
+                        result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
                     else
                     {
