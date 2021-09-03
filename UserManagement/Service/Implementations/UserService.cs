@@ -84,21 +84,21 @@ namespace Service.Implementations
                 #region Keys validation
                 if (!IsEmailAvailable(model.Email))
                 {
-                    var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
-                    if (checkVerifiedUser != null && !checkVerifiedUser.EmailConfirmed)
-                    {
-                        if (CheckValidUnverifiedAccount(checkVerifiedUser))
-                        {
-                            await SendOTPVerification(checkVerifiedUser.Email);
-                            result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
-                            return result;
-                        }
-                        else
-                        {
-                            await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == checkVerifiedUser.Id);
-                        }
-                    }
-                    else
+                    //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
+                    //if (checkVerifiedUser != null && !checkVerifiedUser.IsConfirmed)
+                    //{
+                    //    if (CheckValidUnverifiedAccount(checkVerifiedUser))
+                    //    {
+                    //        await SendOTPVerification(checkVerifiedUser.Email);
+                    //        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                    //        return result;
+                    //    }
+                    //    else
+                    //    {
+                    //        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == checkVerifiedUser.Id);
+                    //    }
+                    //}
+                    //else
                     {
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                         return result;
@@ -125,22 +125,22 @@ namespace Service.Implementations
                     NormalizedEmail = string.IsNullOrEmpty(model.Email) ? "" : model.Email.ToUpper(),
                     PhoneNumber = model.PhoneNumber,
                     FullName = model.FullName,
-                    EmailConfirmed = model.IsEmailConfirmed,
+                    IsConfirmed = false,
                 };
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
                 _dbContext.Users.InsertOne(user);
-                if (!model.IsEmailConfirmed)
-                {
-                    await SendOTPVerification(user.Email);
-                    // Create Profile when register successfully
-                    var token = GetAccessToken(user);
-                    await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
-                    {
-                        email = user.Email,
-                        phoneNumber = user.PhoneNumber,
-                        fullname = user.FullName
-                    });
-                }
+                //if (!string.IsNullOrEmpty(user.Email))
+                //{
+                //    await SendOTPVerification(user.Email);
+                //    // Create Profile when register successfully
+                //    //var token = GetAccessToken(user);
+                //    //await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
+                //    //{
+                //    //    email = user.Email,
+                //    //    phoneNumber = user.PhoneNumber,
+                //    //    fullname = user.FullName
+                //    //});
+                //}
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -177,7 +177,10 @@ namespace Service.Implementations
 
         public bool IsPhoneNumberAvailable(string phoneNumber)
         {
-            if (string.IsNullOrEmpty(phoneNumber)) return true;
+            if (string.IsNullOrEmpty(phoneNumber))
+            {
+                throw new Exception("REQUIRED_PHONE_NUMBER");
+            };
             var user = _dbContext.Users.Find(i => i.PhoneNumber == phoneNumber).FirstOrDefault();
             return user == null;
         }
@@ -245,7 +248,7 @@ namespace Service.Implementations
                     return result;
                     #endregion
                 }
-                if (!user.EmailConfirmed)
+                if (!user.IsConfirmed)
                 {
                     if (CheckValidUnverifiedAccount(user))
                     {
@@ -297,7 +300,7 @@ namespace Service.Implementations
             {
                 Username = guid,
                 NormalizedUsername = guid.ToUpper(),
-                EmailConfirmed = true,
+                IsConfirmed = true,
             };
             user.HashedPassword = passwordHasher.HashPassword(user, guid);
             await _dbContext.Users.InsertOneAsync(user);
@@ -840,7 +843,7 @@ namespace Service.Implementations
                     }
                     else
                     {
-                        await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.EmailConfirmed, true));
+                        await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.IsConfirmed, true));
 
                         result.Succeed = true;
                     }
