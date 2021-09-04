@@ -65,7 +65,7 @@ namespace UserManagement_App.Controllers
         public IActionResult ResetDefault(string username)
         {
             var result = _userService.ResetDefaultPassword(username);
-            if (result.Succeed) return Ok(result.Data);
+            if (result.Succeed) return Ok(result);
             return BadRequest(result.ErrorMessage);
         }
 
