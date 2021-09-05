@@ -75,7 +75,42 @@ namespace Service.Implementations
             }
             return result;
         }
+        public async Task<ResultModel> UpdateUser(UserUpdateModel model, string userId)
+        {
+            var result = new ResultModel();
+            try
+            {
 
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "Invalid Login Token";
+                    return result;
+
+                }
+                if (!string.IsNullOrEmpty(model.FullName))
+                {
+                    user.FullName = model.FullName;
+                }
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                {
+                    var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefaultAsync();
+                    if (existPhoneNumber != null)
+                    {
+                        result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
+                        return result;
+                    }
+                    user.PhoneNumber = model.PhoneNumber;
+                }
+                await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
         public async Task<ResultModel> Create(UserCreateModel model)
         {
             var result = new ResultModel();
@@ -179,7 +214,8 @@ namespace Service.Implementations
         {
             if (string.IsNullOrEmpty(phoneNumber))
             {
-                throw new Exception("REQUIRED_PHONE_NUMBER");
+                return true;
+                //throw new Exception("REQUIRED_PHONE_NUMBER");
             };
             var user = _dbContext.Users.Find(i => i.PhoneNumber == phoneNumber).FirstOrDefault();
             return user == null;

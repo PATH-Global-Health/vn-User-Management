@@ -24,6 +24,7 @@ namespace Data.ViewModels
     public class UserUpdateModel
     {
         public string FullName { get; set; }
+        public string PhoneNumber { get; set; }
     }
 
     public class UserInformationModel

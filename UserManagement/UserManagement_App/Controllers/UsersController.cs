@@ -60,6 +60,15 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
+        [HttpPut()]
+        public async Task<IActionResult> UpdateInfoAsync([FromBody] UserUpdateModel model)
+        {
+            var userId = User.GetId();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+            var result = await _userService.UpdateUser(model, User.GetId());
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
 
         [HttpGet("Tools/ResetDefaultPassword")]
         public IActionResult ResetDefault(string username)
