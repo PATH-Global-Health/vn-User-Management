@@ -2,6 +2,7 @@
 using Data.ViewModels;
 using Data.ViewModels.FacebookAuths;
 using Data.ViewModels.GoogleAuths;
+using Data.ViewModels.SMSs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,8 +49,11 @@ namespace UserManagement_App.Extensions
             configuration.Bind(nameof(GoogleAuthSettings), googleAuthSettings);
             services.AddSingleton(googleAuthSettings);
             services.AddTransient<IGoogleAuthService, GoogleAuthService>();
-            
 
+            var smsAuthorization = new SMSAuthorization();
+            configuration.Bind(nameof(SMSAuthorization), smsAuthorization);
+            services.AddSingleton(smsAuthorization);
+            services.AddTransient<ISMSService, SMSService>();
         }
 
         public static void ConfigSwagger(this IServiceCollection services)

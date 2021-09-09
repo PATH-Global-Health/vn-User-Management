@@ -33,7 +33,8 @@ namespace Service.Implementations
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
         private readonly IScheduleManagementAPIService _scheduleManagementAPIService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, IScheduleManagementAPIService scheduleManagementAPIService)
+        private readonly ISMSService _smsService;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, IScheduleManagementAPIService scheduleManagementAPIService, ISMSService smsService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -43,6 +44,7 @@ namespace Service.Implementations
             _facebookAuthService = facebookAuthService;
             _googleAuthService = googleAuthService;
             _scheduleManagementAPIService = scheduleManagementAPIService;
+            _smsService = smsService;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -833,25 +835,29 @@ namespace Service.Implementations
                 }
                 else
                 {
-
-                    //var otp = OTPHepler.GenerateOTP();
-                    //var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Email == phoneNumber,
-                    //  Builders<UserInformation>.Update.Set(x => x.OTP, otp));
-                    //if (updateResult.ModifiedCount != 0)
-                    //{
-                    //    var isMailSent = await _mailService.SendEmail(new EmailViewModel()
-                    //    {
-                    //        To = phoneNumber,
-                    //        Subject = "USAID Verification Code",
-                    //        Text = $"The verification code is: {otp.Value}"
-                    //    });
-                    //    result.Succeed = isMailSent;
-                    //}
-                    //else
-                    //{
-                    //    result.ErrorMessage = "Email does not match";
-                    //}
-                    result.Succeed = true;
+                    var otp = OTPHepler.GenerateOTP();
+                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.PhoneNumber == phoneNumber,
+                      Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    if (updateResult.ModifiedCount != 0)
+                    {
+                        //var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                        //{
+                        //    To = phoneNumber,
+                        //    Subject = "USAID Verification Code",
+                        //    Text = $"The verification code is: {otp.Value}"
+                        //});
+                        //result.Succeed = isMailSent;
+                        var smsResponse = await _smsService.SendOTP(otp.Value, phoneNumber);
+                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                        {
+                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                        }
+                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = "Email does not match";
+                    }
                 }
             }
             catch (Exception e)
@@ -874,15 +880,14 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = "User does not exist";
                     }
-                    else if (!request.OTP.Contains("99"))
-                    //else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    //else if (!request.OTP.Contains("99"))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
                     else
                     {
                         await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.IsConfirmed, true));
-
                         result.Succeed = true;
                     }
                 }
