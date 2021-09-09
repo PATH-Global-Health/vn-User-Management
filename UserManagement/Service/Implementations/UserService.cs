@@ -831,7 +831,12 @@ namespace Service.Implementations
                 if (user == null)
                 {
                     result.Succeed = false;
-                    result.ErrorMessage = "User does not exist";
+                    result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
+                }
+                else if (user.IsConfirmed)
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = ErrorConstants.IS_CONFIRMED;
                 }
                 else
                 {

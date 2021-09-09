@@ -18,5 +18,6 @@ namespace Data.Constants
         public const string REQUIRED_PHONE_NUMBER = "REQUIRED_PHONE_NUMBER";
         public const string INCORRECT_OTP = "INCORRECT_OTP";
         public const string UNDEFINED_PHONENUMBER = "UNDEFINED_PHONENUMBER";
+        public const string IS_CONFIRMED= "IS_CONFIRMED";
     }
 }
