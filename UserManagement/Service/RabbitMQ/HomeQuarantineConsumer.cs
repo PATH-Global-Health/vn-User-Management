@@ -18,7 +18,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Service.RabbitMQ
 {
-    public class Consumer : BackgroundService
+    public class HomeQuarantineConsumer : BackgroundService
     {
         private IConnection connection;
         private IModel channel;
@@ -27,7 +27,7 @@ namespace Service.RabbitMQ
         private readonly IConfiguration _configuration;
         private readonly ILogger<Consumer> _logger;
 
-        public Consumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
+        public HomeQuarantineConsumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
         {
             _scopeFactory = scopeFactory;
             _configuration = configuration;
@@ -45,19 +45,19 @@ namespace Service.RabbitMQ
                 connection = factory.CreateConnection();
                 channel = connection.CreateModel();
 
-                channel.QueueDeclare(queue: "CreateAccount2", durable: false,
+                channel.QueueDeclare(queue: "HomeQuarantineCreateAccount", durable: false,
                   exclusive: false, autoDelete: false, arguments: null);
                 channel.BasicQos(0, 1, false);
                 consumer = new EventingBasicConsumer(channel);
-                channel.BasicConsume(queue: "CreateAccount2",
+                channel.BasicConsume(queue: "HomeQuarantineCreateAccount",
                   autoAck: false, consumer: consumer);
-            _logger.LogInformation("-RabbitMQ queue created: CreateAccount2");
+                _logger.LogInformation("-RabbitMQ queue created: HomeQuarantineCreateAccount");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "RabbitMQ queue create fail.");
             }
-            
+
 
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -82,7 +82,7 @@ namespace Service.RabbitMQ
                     }
                     else
                     {
-                        response = "Success";
+                        response = result.Data + "";
                     }
                 }
                 catch (Exception e)
