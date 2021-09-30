@@ -1,0 +1,26 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: user-management-dev
+  namespace: default
+  labels:
+    app: user-management-dev
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-management-dev
+  template:
+    metadata:
+      labels:
+        app: user-management-dev
+        role: rolling-update
+    spec:
+      containers:
+        - name: user-management-dev
+          image: 'bakcovn/user-management:dev-<TAG>'
+      imagePullSecrets:
+        - name: regcred
+  strategy:
+    type: RollingUpdate

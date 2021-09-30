@@ -32,6 +32,8 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IPermissionsService, PermissionsService>();
+            services.AddSingleton<IHostedService, Consumer>();
+            services.AddSingleton<IHostedService, HomeQuarantineConsumer>();
             services.AddHostedService<Consumer>();
             services.AddScoped<IProvincialService, ProvincialService>();
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();

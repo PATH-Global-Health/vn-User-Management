@@ -1,20 +1,24 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Service.Interfaces;
 using Data.ViewModels;
+using Service.Implementations;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Service.RabbitMQ
 {
-    public class Consumer : BackgroundService
+    public class HomeQuarantineConsumer : BackgroundService
     {
         private IConnection connection;
         private IModel channel;
@@ -22,8 +26,8 @@ namespace Service.RabbitMQ
         private EventingBasicConsumer consumer;
         private readonly IConfiguration _configuration;
         private readonly ILogger<Consumer> _logger;
-        string queue = "queue4";
-        public Consumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
+
+        public HomeQuarantineConsumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
         {
             _scopeFactory = scopeFactory;
             _configuration = configuration;
@@ -35,34 +39,31 @@ namespace Service.RabbitMQ
         {
             try
             {
-
                 var factory = new ConnectionFactory();
                 _configuration.Bind("RabbitMqConnection", factory);
 
                 connection = factory.CreateConnection();
                 channel = connection.CreateModel();
 
-                channel.QueueDeclare(queue: queue, durable: false,
-                    exclusive: false, autoDelete: false, arguments: null);
-
-                //channel.BasicQos(0, 1, false);
-
-                _logger.LogInformation($"-RabbitMQ Queue created: {queue}");
+                channel.QueueDeclare(queue: "HomeQuarantineCreateAccount", durable: false,
+                  exclusive: false, autoDelete: false, arguments: null);
+                channel.BasicQos(0, 1, false);
+                consumer = new EventingBasicConsumer(channel);
+                channel.BasicConsume(queue: "HomeQuarantineCreateAccount",
+                  autoAck: false, consumer: consumer);
+                _logger.LogInformation("-RabbitMQ queue created: HomeQuarantineCreateAccount");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "RabbitMQ queue create fail.");
             }
+
+
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             stoppingToken.ThrowIfCancellationRequested();
-            var consumer = new EventingBasicConsumer(channel);
-
-            channel.BasicConsume(queue: queue,
-              autoAck: false, consumer: consumer);
-
-            consumer.Received += async (model, ea) =>
+            consumer.Received += (model, ea) =>
             {
                 string response = null;
 
@@ -74,15 +75,19 @@ namespace Service.RabbitMQ
                 try
                 {
                     var message = Encoding.UTF8.GetString(body);
-                    var result = await RegisterAccountAsync(message);
-                    response = JsonConvert.SerializeObject(result);
+                    var result = RegisterAccount(message);
+                    if (result.Succeed == false)
+                    {
+                        response = result.ErrorMessage;
+                    }
+                    else
+                    {
+                        response = result.Data + "";
+                    }
                 }
                 catch (Exception e)
                 {
-                    var result = new ResultModel();
-                    result.Succeed = false;
-                    result.ErrorMessage = e.InnerException != null ? e.InnerException.Message + "\n" + e.StackTrace : e.Message + "\n" + e.StackTrace;
-                    response = JsonConvert.SerializeObject(result);
+                    response = e.Message;
                 }
                 finally
                 {
@@ -97,15 +102,12 @@ namespace Service.RabbitMQ
             return Task.CompletedTask;
         }
         private ResultModel RegisterAccount(string message)
-
-        private async Task<ResultModel> RegisterAccountAsync(string message)
         {
             var messageAccountDTO = JsonConvert.DeserializeObject<UserCreateModel>(message);
             using (var scope = _scopeFactory.CreateScope())
             {
                 IUserService _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-                var result = await _userService.Create(messageAccountDTO);
-                return result;
+                return _userService.Create(messageAccountDTO);
             }
         }
     }
