@@ -96,7 +96,6 @@ namespace Service.RabbitMQ
             };
             return Task.CompletedTask;
         }
-        private ResultModel RegisterAccount(string message)
 
         private async Task<ResultModel> RegisterAccountAsync(string message)
         {

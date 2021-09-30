@@ -63,7 +63,7 @@ namespace Service.RabbitMQ
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             stoppingToken.ThrowIfCancellationRequested();
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
                 string response = null;
 
@@ -75,7 +75,7 @@ namespace Service.RabbitMQ
                 try
                 {
                     var message = Encoding.UTF8.GetString(body);
-                    var result = RegisterAccount(message);
+                    var result = await RegisterAccountAsync(message);
                     if (result.Succeed == false)
                     {
                         response = result.ErrorMessage;
@@ -101,13 +101,14 @@ namespace Service.RabbitMQ
             };
             return Task.CompletedTask;
         }
-        private ResultModel RegisterAccount(string message)
+        private async Task<ResultModel> RegisterAccountAsync(string message)
         {
             var messageAccountDTO = JsonConvert.DeserializeObject<UserCreateModel>(message);
             using (var scope = _scopeFactory.CreateScope())
             {
                 IUserService _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-                return _userService.Create(messageAccountDTO);
+                var result = await _userService.Create(messageAccountDTO);
+                return result;
             }
         }
     }
