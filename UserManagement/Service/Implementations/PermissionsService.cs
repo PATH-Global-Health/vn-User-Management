@@ -4,6 +4,7 @@ using Data.Enums;
 using Data.MongoCollections;
 using Data.ViewModels;
 using MongoDB.Driver;
+using MoreLinq;
 using Service.Interfaces;
 using System;
 using System.Collections.Concurrent;
@@ -459,6 +460,7 @@ namespace Service.Implementations
         }
         public List<UiPermissionModel> GetUserUiPermissions(string userId)
         {
+
             var result = new List<UiPermissionModel>();
             try
             {
@@ -466,8 +468,46 @@ namespace Service.Implementations
                 if (user != null)
                 {
                     var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
-
                     var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    if (user.GroupIds.Any())
+                    {
+                        var groupFilters = Builders<Group>.Filter.In(i => i.Id, user.GroupIds);
+                        var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                        permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.UiPermissionIds)) & Builders<UiPermission>.Filter.Eq(i => i.Type, PermissionType.Allow);
+                        var groupPermissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(groupPermissions);
+                    }
+
+                    if (user.RoleIds.Any())
+                    {
+                        #region permissions in user's roles
+                        var roleFilters = Builders<Role>.Filter.In(i => i.Id, user.RoleIds);
+                        var roles = _dbContext.Roles.Find(roleFilters).ToList();
+
+                        permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, roles.SelectMany(i => i.UiPermissionIds)) & Builders<UiPermission>.Filter.Eq(i => i.Type, PermissionType.Allow);
+                        var rolePermissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(rolePermissions);
+                        #endregion
+
+                        #region permissions in role's groups
+                        var groupsOfRolesIds = roles.SelectMany(i => i.GroupIds);
+
+                        if (groupsOfRolesIds.Any())
+                        {
+                            var groupFilters = Builders<Group>.Filter.In(i => i.Id, groupsOfRolesIds);
+                            var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                            permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.UiPermissionIds)) & Builders<UiPermission>.Filter.Eq(i => i.Type, PermissionType.Allow);
+                            var groupPermissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+                            permissions.AddRange(groupPermissions);
+                        }
+
+                        #endregion
+                    }
+
+                    permissions = permissions.DistinctBy(i => i.Id).ToList();
 
                     result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(permissions);
                 }

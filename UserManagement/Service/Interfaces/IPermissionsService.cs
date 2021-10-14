@@ -20,5 +20,6 @@ namespace Service.Interfaces
         ResultModel GetAllUiPermission();
 
         ResultModel Validate(ResourcePermissionValidationModel model, string userId);
+        List<UiPermissionModel> GetUserUiPermissions(string userId);
     }
 }

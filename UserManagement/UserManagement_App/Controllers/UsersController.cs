@@ -91,7 +91,7 @@ namespace UserManagement_App.Controllers
         {
             var userId = User.GetId();
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
-            var permissions = _permissionService.GetUiPermissions(userId, Data.Enums.HolderType.User);
+            var permissions = _permissionService.GetUserUiPermissions(userId);
 
             return Ok(permissions);
         }
