@@ -11,7 +11,7 @@ namespace Service.Interfaces
         bool IsEmailAvailable(string email);
         bool IsPhoneNumberAvailable(string phoneNumber);
 
-        List<UserInformationModel> GetAll();
+        Task<List<UserInformationModel>> GetAllAsync(string keyword);
         Task<ResultModel> Create(UserCreateModel model);
         Task<ResultModel> Login(LoginModel model);
         Task<ResultModel> AnonymousLogin();

@@ -8,6 +8,7 @@ using Data.ViewModels.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Service.Helper;
 using Service.Interfaces;
@@ -479,10 +480,19 @@ namespace Service.Implementations
             return result;
         }
 
-        public List<UserInformationModel> GetAll()
+        public async Task<List<UserInformationModel>> GetAllAsync(string keyword)
         {
-            var users = _dbContext.Users.Find(i => true).ToList();
-            return _mapper.Map<List<UserInformation>, List<UserInformationModel>>(users);
+
+            var usersFilters = Builders<UserInformation>.Filter.Empty;
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                usersFilters &= Builders<UserInformation>.Filter.Regex(i => i.Username, new BsonRegularExpression("^.*?" + keyword + ".*?$", "i"));
+                usersFilters |= Builders<UserInformation>.Filter.Regex(i => i.PhoneNumber, new BsonRegularExpression("^.*?" + keyword + ".*?$", "i"));
+            }
+
+            var userFluent = _dbContext.Users.Find(usersFilters);
+            var result = await userFluent.ToListAsync();
+            return _mapper.Map<List<UserInformation>, List<UserInformationModel>>(result);
         }
 
         public List<RoleModel> GetRoles(string userId)

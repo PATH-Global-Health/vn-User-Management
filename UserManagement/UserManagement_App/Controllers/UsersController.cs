@@ -25,9 +25,9 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAllAsync(string keyword)
         {
-            var users = _userService.GetAll();
+            var users = await _userService.GetAllAsync(keyword);
             return Ok(users);
         }
         /// <summary>
