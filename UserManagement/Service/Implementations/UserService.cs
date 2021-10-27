@@ -10,8 +10,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using Service.Helper;
 using Service.Interfaces;
+using Service.RabbitMQ;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -34,7 +36,11 @@ namespace Service.Implementations
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
         private readonly ISMSService _smsService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, ISMSService smsService)
+        private readonly IVerifyUserPublisher _publisher;
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
+            IHttpClientFactory httpClientFactory, IMailService mailService,
+            IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
+            ISMSService smsService, IVerifyUserPublisher publisher)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -44,6 +50,7 @@ namespace Service.Implementations
             _facebookAuthService = facebookAuthService;
             _googleAuthService = googleAuthService;
             _smsService = smsService;
+            _publisher = publisher;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -901,6 +908,14 @@ namespace Service.Implementations
                     else
                     {
                         await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.IsConfirmed, true));
+                        try
+                        {
+                            _publisher.Publish(JsonConvert.SerializeObject(new { Username = user.Username, IsConfirmed = true }));
+                        }
+                        catch (Exception)
+                        {
+
+                        }
                         result.Succeed = true;
                     }
                 }
