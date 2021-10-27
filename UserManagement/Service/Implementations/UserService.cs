@@ -911,5 +911,25 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<ResultModel> IsConfirmdUser(string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                username = username.ToUpper();
+                var isConfirmed = await _dbContext.Users.Find(i => i.NormalizedUsername == username)
+                    .Project(x => x.IsConfirmed)
+                    .FirstOrDefaultAsync();
+
+                result.Data = isConfirmed;
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }

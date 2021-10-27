@@ -35,5 +35,6 @@ namespace Service.Interfaces
         List<GroupModel> GetGroups(string userId);
         Task<ResultModel> LoginWithFacebookAsync(string accessToken);
         Task<ResultModel> LoginWithGoogleAsync(string idToken);
+        Task<ResultModel> IsConfirmdUser(string username);
     }
 }
