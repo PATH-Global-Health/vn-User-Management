@@ -915,7 +915,7 @@ namespace Service.Implementations
                                 Username = user.Username,
                                 IsConfirmed = true,
                                 Status = 2,
-                                CustomerId = user.Id
+                                //CustomerId = user.Id
                             }));
                         }
                         catch (Exception)

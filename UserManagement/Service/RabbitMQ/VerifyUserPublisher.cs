@@ -29,7 +29,8 @@ namespace Service.RabbitMQ
 
         public void Publish(string message)
         {
-            string exchange = "VerifyUserExchange";
+            string exchange = "SetStatusProfile2";
+            //string exchange = "VerifyUserExchange";
             try
             {
                 connection = _factory.CreateConnection();
