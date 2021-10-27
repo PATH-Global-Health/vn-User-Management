@@ -910,7 +910,13 @@ namespace Service.Implementations
                         await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.IsConfirmed, true));
                         try
                         {
-                            _publisher.Publish(JsonConvert.SerializeObject(new { Username = user.Username, IsConfirmed = true }));
+                            _publisher.Publish(JsonConvert.SerializeObject(new
+                            {
+                                Username = user.Username,
+                                IsConfirmed = true,
+                                Status = 2,
+                                CustomerId = user.Id
+                            }));
                         }
                         catch (Exception)
                         {
