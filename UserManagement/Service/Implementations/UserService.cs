@@ -33,9 +33,8 @@ namespace Service.Implementations
         private readonly IFacebookAuthService _facebookAuthService;
         private readonly IGoogleAuthService _googleAuthService;
         private readonly IMailService _mailService;
-        private readonly IScheduleManagementAPIService _scheduleManagementAPIService;
         private readonly ISMSService _smsService;
-        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, IScheduleManagementAPIService scheduleManagementAPIService, ISMSService smsService)
+        public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext, IHttpClientFactory httpClientFactory, IMailService mailService, IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService, ISMSService smsService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -44,7 +43,6 @@ namespace Service.Implementations
             _mailService = mailService;
             _facebookAuthService = facebookAuthService;
             _googleAuthService = googleAuthService;
-            _scheduleManagementAPIService = scheduleManagementAPIService;
             _smsService = smsService;
         }
 
