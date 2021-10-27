@@ -918,11 +918,13 @@ namespace Service.Implementations
             try
             {
                 username = username.ToUpper();
-                var isConfirmed = await _dbContext.Users.Find(i => i.NormalizedUsername == username)
-                    .Project(x => x.IsConfirmed)
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username)
                     .FirstOrDefaultAsync();
-
-                result.Data = isConfirmed;
+                if (user == null)
+                {
+                    throw new Exception(ErrorConstants.NOT_EXIST_ACCOUNT);
+                }
+                result.Data = user.IsConfirmed;
                 result.Succeed = true;
             }
             catch (Exception e)
