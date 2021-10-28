@@ -914,7 +914,7 @@ namespace Service.Implementations
                             {
                                 Username = user.Username,
                                 IsConfirmed = true,
-                                Status = 2,
+                                Status = 1,
                                 //CustomerId = user.Id
                             }));
                         }
