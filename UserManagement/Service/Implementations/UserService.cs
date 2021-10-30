@@ -901,7 +901,7 @@ namespace Service.Implementations
                         result.ErrorMessage = "User does not exist";
                     }
                     //else if (!request.OTP.Contains("99"))
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
