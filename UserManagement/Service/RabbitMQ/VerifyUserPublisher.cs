@@ -48,7 +48,6 @@ namespace Service.RabbitMQ
             catch (Exception) { }
             finally
             {
-                Close();
             }
         }
 
