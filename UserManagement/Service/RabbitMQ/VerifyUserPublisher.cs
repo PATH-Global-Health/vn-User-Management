@@ -29,7 +29,7 @@ namespace Service.RabbitMQ
 
         public void Publish(string message)
         {
-            string exchange = "SetStatusProfile2";
+            string queue = "SetStatusProfile2";
             //string exchange = "VerifyUserExchange";
             try
             {
@@ -37,11 +37,10 @@ namespace Service.RabbitMQ
                 channel = connection.CreateModel();
                 var props = channel.CreateBasicProperties();
 
-                channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Fanout);
                 //props.AppId = ApplicationType.Examination.ToString("d");
                 var body = Encoding.UTF8.GetBytes(message);
-                channel.BasicPublish(exchange: exchange,
-                                     routingKey: "",
+                channel.BasicPublish(exchange: "",
+                                     routingKey: queue,
                                      basicProperties: props,
                                      body: body);
             }
