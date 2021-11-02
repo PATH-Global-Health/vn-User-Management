@@ -954,5 +954,15 @@ namespace Service.Implementations
             }
             return result;
         }
+        public void TestRabbitMQ(string username)
+        {
+            _publisher.Publish(JsonConvert.SerializeObject(new
+            {
+                Username = username,
+                IsConfirmed = true,
+                Status = 1,
+                //CustomerId = user.Id
+            }));
+        }
     }
 }

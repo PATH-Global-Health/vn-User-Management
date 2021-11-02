@@ -29,7 +29,7 @@ namespace Service.RabbitMQ
 
         public void Publish(string message)
         {
-            string queue = "ConfirmedCustomerStatus1";
+            string queue = "ConfirmedCustomerStatus8";
             //string exchange = "VerifyUserExchange";
             try
             {
@@ -47,20 +47,14 @@ namespace Service.RabbitMQ
             catch (Exception) { }
             finally
             {
+                Close();
             }
         }
 
         public void Close()
         {
-            if (channel != null)
-            {
-                channel.Close();
-            }
-
-            if (connection != null)
-            {
+            if (connection != null && connection.IsOpen)
                 connection.Close();
-            }
         }
 
         public void Dispose()

@@ -277,5 +277,16 @@ namespace UserManagement_App.Controllers
             }
             return BadRequest(login.ErrorMessage);
         }
+        [AllowAnonymous]
+        [HttpPost("TestRabbitMQ")]
+        public IActionResult TestRabbitMQ(string username)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            _userService.TestRabbitMQ(username);
+            return Ok();
+        }
     }
 }

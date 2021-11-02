@@ -36,5 +36,6 @@ namespace Service.Interfaces
         Task<ResultModel> LoginWithFacebookAsync(string accessToken);
         Task<ResultModel> LoginWithGoogleAsync(string idToken);
         Task<ResultModel> IsConfirmdUser(string username);
+        void TestRabbitMQ(string username);
     }
 }
