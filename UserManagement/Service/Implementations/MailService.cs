@@ -4,10 +4,6 @@ using RestSharp;
 using RestSharp.Authenticators;
 using Service.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Service.Implementations

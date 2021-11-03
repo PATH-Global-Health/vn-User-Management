@@ -418,9 +418,9 @@ namespace Service.Implementations
                         NormalizedPath = p.Key.ToUpper().Trim(),
                         NormalizedMethod = GetMethodName(p.Value).ToUpper().Trim()
                     }), element =>
-                     {
-                         return new { element.NormalizedPath, element.NormalizedMethod };
-                     });
+                    {
+                        return new { element.NormalizedPath, element.NormalizedMethod };
+                    });
 
                     //Add new api paths and add new permissions
                     if (newPaths.Any())

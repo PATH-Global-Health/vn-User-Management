@@ -20,6 +20,10 @@ namespace Service.Implementations
         private readonly ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
 
+        #region Special Roles
+        private const string SUPER_ADMIN_ROLE = "SUPERADMIN";
+        #endregion
+
         public PermissionsService(ApplicationDbContext dbContext, IMapper mapper)
         {
             _dbContext = dbContext;
@@ -27,6 +31,18 @@ namespace Service.Implementations
         }
 
         #region Resource Permission
+        public ResultModel AddPermissions(string holderId, HolderType holderType, List<ResourcePermissionCreateModel> permissions)
+        {
+            ResultModel result = new ResultModel();
+            switch (holderType)
+            {
+                case HolderType.User: result = AddUserPermissions(holderId, permissions); break;
+                case HolderType.Role: result = AddRolePermissions(holderId, permissions); break;
+                case HolderType.Group: result = AddGroupPermissions(holderId, permissions); break;
+            }
+            return result;
+        }
+
         public ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model)
         {
             ResultModel result = new ResultModel();
@@ -143,9 +159,146 @@ namespace Service.Implementations
             }
             return result;
         }
+
+
+
+        private ResultModel AddUserPermissions(string userId, List<ResourcePermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    user.ResourcePermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.ResourcePermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Errors occurred while creating permissions";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddRolePermissions(string roleId, List<ResourcePermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                if (role == null)
+                {
+                    result.ErrorMessage = "Role is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    role.ResourcePermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.ResourcePermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Errors occurred while creating permissions";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddGroupPermissions(string groupId, List<ResourcePermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                if (group == null)
+                {
+                    result.ErrorMessage = "Group is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    group.ResourcePermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.ResourcePermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Errors occurred while creating permissions";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
         #endregion
 
         #region Ui Permission
+        public ResultModel AddPermissions(string holderId, HolderType holderType, List<UiPermissionCreateModel> permissions)
+        {
+            ResultModel result = new ResultModel();
+            switch (holderType)
+            {
+                case HolderType.User: result = AddUserPermissions(holderId, permissions); break;
+                case HolderType.Role: result = AddRolePermissions(holderId, permissions); break;
+                case HolderType.Group: result = AddGroupPermissions(holderId, permissions); break;
+            }
+            return result;
+        }
+
         public ResultModel AddPermission(string holderId, HolderType holder, UiPermissionCreateModel model)
         {
             ResultModel result = new ResultModel();
@@ -246,6 +399,132 @@ namespace Service.Implementations
                 else
                 {
                     return createPermissionResult;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddGroupPermissions(string groupId, List<UiPermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                if (group == null)
+                {
+                    result.ErrorMessage = "Group is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    group.UiPermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.UiPermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Some of the permissions cannot be created";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddRolePermissions(string roleId, List<UiPermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                if (role == null)
+                {
+                    result.ErrorMessage = "Role is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    role.UiPermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.UiPermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Some of the permissions cannot be created";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddUserPermissions(string userId, List<UiPermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                    return result;
+                }
+
+                var createPermissionResults = models.AsParallel().Select(model => CreatePermission(model));
+
+                if (createPermissionResults.All(i => i.Succeed))
+                {
+                    user.UiPermissionIds.AddRange(createPermissionResults.Select(rs => (string)rs.Data));
+
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    var createdPermissionIds = createPermissionResults.Where(i => i.Succeed).Select(i => (string)i.Data);
+                    createdPermissionIds.AsParallel().ForAll(id =>
+                    {
+                        _dbContext.UiPermissions.DeleteOne(i => i.Id == id);
+                    });
+
+                    result.Succeed = false;
+                    result.ErrorMessage = "Some of the permissions cannot be created";
+                    return result;
                 }
 
                 result.Succeed = true;
@@ -378,8 +657,46 @@ namespace Service.Implementations
                 if (user != null)
                 {
                     var permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, user.ResourcePermissionIds);
-
                     var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+
+                    if (user.GroupIds.Any())
+                    {
+                        var groupFilters = Builders<Group>.Filter.In(i => i.Id, user.GroupIds);
+                        var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                        permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.ResourcePermissionIds)) & Builders<ResourcePermission>.Filter.Eq(i => i.PermissionType, PermissionType.Allow);
+                        var groupPermissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(groupPermissions);
+                    }
+
+                    if (user.RoleIds.Any())
+                    {
+                        #region permissions in user's roles
+                        var roleFilters = Builders<Role>.Filter.In(i => i.Id, user.RoleIds);
+                        var roles = _dbContext.Roles.Find(roleFilters).ToList();
+
+                        permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, roles.SelectMany(i => i.ResourcePermissionIds)) & Builders<ResourcePermission>.Filter.Eq(i => i.PermissionType, PermissionType.Allow);
+                        var rolePermissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(rolePermissions);
+                        #endregion
+
+                        #region permissions in role's groups
+                        var groupsOfRolesIds = roles.SelectMany(i => i.GroupIds);
+
+                        if (groupsOfRolesIds.Any())
+                        {
+                            var groupFilters = Builders<Group>.Filter.In(i => i.Id, groupsOfRolesIds);
+                            var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                            permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.ResourcePermissionIds)) & Builders<ResourcePermission>.Filter.Eq(i => i.PermissionType, PermissionType.Allow);
+                            var groupPermissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+                            permissions.AddRange(groupPermissions);
+                        }
+
+                        #endregion
+                    }
+
+                    permissions = permissions.DistinctBy(i => i.Id).ToList();
 
                     result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(permissions);
                 }
@@ -428,8 +745,19 @@ namespace Service.Implementations
                 if (role != null)
                 {
                     var permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, role.ResourcePermissionIds);
-
                     var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+
+                    if (role.GroupIds.Any())
+                    {
+                        var groupFilters = Builders<Group>.Filter.In(i => i.Id, role.GroupIds);
+                        var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                        permissionFilters = Builders<ResourcePermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.ResourcePermissionIds)) & Builders<ResourcePermission>.Filter.Eq(i => i.PermissionType, PermissionType.Allow);
+                        var groupPermissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(groupPermissions);
+                    }
+
+                    permissions = permissions.DistinctBy(i => i.Id).ToList();
 
                     result = _mapper.Map<List<ResourcePermission>, List<ResourcePermissionModel>>(permissions);
                 }
@@ -460,7 +788,6 @@ namespace Service.Implementations
         }
         public List<UiPermissionModel> GetUserUiPermissions(string userId)
         {
-
             var result = new List<UiPermissionModel>();
             try
             {
@@ -556,8 +883,19 @@ namespace Service.Implementations
                 if (role != null)
                 {
                     var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, role.UiPermissionIds);
-
                     var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    if (role.GroupIds.Any())
+                    {
+                        var groupFilters = Builders<Group>.Filter.In(i => i.Id, role.GroupIds);
+                        var groups = _dbContext.Groups.Find(groupFilters).ToList();
+
+                        permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, groups.SelectMany(i => i.UiPermissionIds)) & Builders<UiPermission>.Filter.Eq(i => i.Type, PermissionType.Allow);
+                        var groupPermissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+                        permissions.AddRange(groupPermissions);
+                    }
+
+                    permissions = permissions.DistinctBy(i => i.Id).ToList();
 
                     result = _mapper.Map<List<UiPermission>, List<UiPermissionModel>>(permissions);
                 }
@@ -615,6 +953,11 @@ namespace Service.Implementations
             var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
             if (user != null)
             {
+                if (IsSpecialUser(user))
+                {
+                    result.Succeed = true;
+                    return result;
+                }
 
                 var _lock = new object();
                 Parallel.ForEach(Partitioner.Create(user.ResourcePermissionIds), (permissionId, state) =>
@@ -640,6 +983,11 @@ namespace Service.Implementations
             }
 
             return result;
+        }
+
+        private bool IsSpecialUser(UserInformation user)
+        {
+            return user.NormalizedUsername == SUPER_ADMIN_ROLE;
         }
 
         private List<string> GetSegments(string apiPath)
@@ -722,6 +1070,25 @@ namespace Service.Implementations
             return result;
         }
 
+
+        public ResultModel CreatePermissions(List<ResourcePermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var permissions = _mapper.Map<List<ResourcePermissionCreateModel>, List<ResourcePermission>>(models);
+                var _ = _dbContext.ResourcePermissions.InsertManyAsync(permissions);
+
+                result.Succeed = true;
+                result.Data = permissions.Select(i => i.Id);
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
+
         public ResultModel CreatePermission(UiPermissionCreateModel model)
         {
             var result = new ResultModel();
@@ -739,6 +1106,25 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public ResultModel CreatePermissions(List<UiPermissionCreateModel> models)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var permissions = _mapper.Map<List<UiPermissionCreateModel>, List<UiPermission>>(models);
+                var _ = _dbContext.UiPermissions.InsertManyAsync(permissions);
+
+                result.Succeed = true;
+                result.Data = permissions.Select(i => i.Id);
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
+
         #endregion
 
 

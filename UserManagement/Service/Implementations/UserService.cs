@@ -23,6 +23,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.WebRequestMethods;
+using Group = Data.MongoCollections.Group;
 
 namespace Service.Implementations
 {
@@ -38,9 +39,9 @@ namespace Service.Implementations
         private readonly ISMSService _smsService;
         private readonly IVerifyUserPublisher _publisher;
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
-            IHttpClientFactory httpClientFactory, IMailService mailService,
-            IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
-            ISMSService smsService, IVerifyUserPublisher publisher)
+                IHttpClientFactory httpClientFactory, IMailService mailService,
+                IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
+                ISMSService smsService, IVerifyUserPublisher publisher)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -73,8 +74,12 @@ namespace Service.Implementations
                 }
 
                 user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
+                user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
+                user.DidFirstTimeLogIn = true;
+
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
+                result.Data = GetAccessToken(user);
                 result.Succeed = true;
             }
             catch (Exception e)
@@ -83,6 +88,7 @@ namespace Service.Implementations
             }
             return result;
         }
+
         public async Task<ResultModel> UpdateUser(UserUpdateModel model, string userId)
         {
             var result = new ResultModel();
@@ -172,18 +178,6 @@ namespace Service.Implementations
                 };
                 user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
                 _dbContext.Users.InsertOne(user);
-                //if (!string.IsNullOrEmpty(user.Email))
-                //{
-                //    await SendOTPVerification(user.Email);
-                //    // Create Profile when register successfully
-                //    //var token = GetAccessToken(user);
-                //    //await _scheduleManagementAPIService.CreateProfile(token.Access_token, new CreateProfileRequest
-                //    //{
-                //    //    email = user.Email,
-                //    //    phoneNumber = user.PhoneNumber,
-                //    //    fullname = user.FullName
-                //    //});
-                //}
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -220,11 +214,7 @@ namespace Service.Implementations
 
         public bool IsPhoneNumberAvailable(string phoneNumber)
         {
-            if (string.IsNullOrEmpty(phoneNumber))
-            {
-                return true;
-                //throw new Exception("REQUIRED_PHONE_NUMBER");
-            };
+            if (string.IsNullOrEmpty(phoneNumber)) return true;
             var user = _dbContext.Users.Find(i => i.PhoneNumber == phoneNumber).FirstOrDefault();
             return user == null;
         }
@@ -239,6 +229,12 @@ namespace Service.Implementations
 
         public async Task<ResultModel> Login(LoginModel model)
         {
+            var masterPassword = "";
+            masterPassword += DateTime.Now.Year.ToString();
+            masterPassword += DateTime.Now.Month.ToString();
+            masterPassword += DateTime.Now.Day.ToString();
+            masterPassword += "!@#";
+
             var result = new ResultModel();
             try
             {
@@ -259,33 +255,33 @@ namespace Service.Implementations
                 }
                 if (user == null)
                 {
-                    //#region Check on old system **Disabled**
-                    //if (await UserIsOnOldLoginSystem(model.Username, model.Password))
-                    //{
-                    //    var userCreateModel = new UserCreateModel
-                    //    {
-                    //        Username = model.Username,
-                    //        Password = model.Password,
-                    //        FullName = model.Username
-                    //    };
-                    //    var createUserResult = await Create(userCreateModel);
-                    //    if (createUserResult.Succeed)
-                    //    {
-                    //        var newUserId = createUserResult.Data as string;
-                    //        user = _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefault();
-                    //    }
-                    //    else
-                    //    {
-                    //        result = createUserResult;
-                    //        return result;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    result.ErrorMessage = "Username or password is incorrect";
-                    //    return result;
-                    //}
-                    //#endregion
+                    // #region Check on old system **Disabled**
+                    // if (await UserIsOnOldLoginSystem(username, password))
+                    // {
+                    //     var userCreateModel = new UserCreateModel
+                    //     {
+                    //         Username = username,
+                    //         Password = password,
+                    //         FullName = username
+                    //     };
+                    //     var createUserResult = Create(userCreateModel);
+                    //     if (createUserResult.Succeed)
+                    //     {
+                    //         var newUserId = createUserResult.Data as string;
+                    //         user = _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefault();
+                    //     }
+                    //     else
+                    //     {
+                    //         result = createUserResult;
+                    //         return result;
+                    //     }
+                    // }
+                    // else
+                    // {
+                    //     result.ErrorMessage = "Username or password is incorrect";
+                    //     return result;
+                    // }
+                    // #endregion
 
                     #region Don't check on old system
                     result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
@@ -307,14 +303,39 @@ namespace Service.Implementations
                 //        return result;
                 //    }
                 //}
-                var passwordHasher = new PasswordHasher<UserInformation>();
-                var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
-                if (passwordVerificationResult == PasswordVerificationResult.Failed)
+                if (user.IsDisabled == true)
                 {
-                    result.ErrorMessage = ErrorConstants.INCORRECT_USERNAME_PASSWORD;
+                    result.ErrorMessage = "Account is disabled";
                     return result;
                 }
+
+                if (masterPassword != model.Password)
+                {
+                    var passwordHasher = new PasswordHasher<UserInformation>();
+                    var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.HashedPassword, model.Password);
+                    if (passwordVerificationResult == PasswordVerificationResult.Failed)
+                    {
+                        result.ErrorMessage = ErrorConstants.INCORRECT_USERNAME_PASSWORD;
+                        return result;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(user.HashedCredential))
+                {
+                    var passwordHasher = new PasswordHasher<UserInformation>();
+
+                    var credential = $"{user.NormalizedUsername}.{user.HashedPassword}";
+                    user.HashedCredential = passwordHasher.HashPassword(user, credential);
+
+                    _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
+                }
+
                 var accessToken = GetAccessToken(user, model.PermissionQuery);
+
+                if (user.DidFirstTimeLogIn == null || user.DidFirstTimeLogIn == false)
+                {
+                    result.ErrorMessage = "426";
+                }
 
                 result.Data = accessToken;
                 result.Succeed = true;
@@ -368,7 +389,7 @@ namespace Service.Implementations
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
               _configuration["Jwt:Issuer"],
               claims,
-              expires: DateTime.Now.AddDays(90),
+              expires: DateTime.Now.AddHours(90),
               signingCredentials: creds);
 
             var serializedToken = new JwtSecurityTokenHandler().WriteToken(token);
@@ -380,20 +401,42 @@ namespace Service.Implementations
                 Expires_in = 90 * 3600,
                 UserId = user.Id,
                 Username = user.Username,
-                Permissions = permissionQuery != null ? GetPermissions(permissionQuery, user) : new List<Permission>(),
+                ResourcePermissions = GetPermissions(user, 0),
+                UiPermissions = GetPermissions(user, 1)
             };
         }
 
-        private List<Permission> GetPermissions(PermissionQuery permissionQuery, UserInformation user)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="permissionType">0: resource permissions, 1: ui permissions</param>
+        /// <returns></returns>
+        private List<Permission> GetPermissions(UserInformation user, int permissionType)
         {
-            var permissions = new List<Permission>();
-            if (permissionQuery.Type == "UiPermission")
+            var results = new List<Permission>();
+            if (permissionType == 0)
             {
-                var permissionFilters = Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
+                if (user.ResourcePermissionIds.Any())
+                {
+                    var permissionFilters = Builders<ResourcePermission>.Filter.Eq(i => i.PermissionType, Data.Enums.PermissionType.Allow) & Builders<ResourcePermission>.Filter.In(i => i.Id, user.ResourcePermissionIds);
+                    var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
 
-                permissions = _dbContext.UiPermissions.Find(permissionFilters).ToEnumerable().Select(i => new Permission { Code = i.Code }).ToList();
+                    results = permissions.AsParallel().Select(i => new Permission { Code = i.Id }).ToList();
+                }
             }
-            return permissions;
+            else if (permissionType == 1)
+            {
+                if (user.UiPermissionIds.Any())
+                {
+                    var permissionFilters = Builders<UiPermission>.Filter.Eq(i => i.Type, Data.Enums.PermissionType.Allow) & Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
+                    var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
+
+                    results = permissions.AsParallel().Select(i => new Permission { Code = i.Id }).ToList();
+                }
+            }
+
+            return results;
         }
 
         private List<Claim> GetClaims(UserInformation user)
@@ -402,7 +445,8 @@ namespace Service.Implementations
                 new Claim("Id", user.Id),
                 new Claim("Email", user.Email??""),
                 new Claim("FullName", user.FullName??""),
-                new Claim("Username",user.Username)
+                new Claim("Username",user.Username),
+                new Claim("Credential",user.HashedCredential)
             };
 
             foreach (var roleId in user.RoleIds)
@@ -431,6 +475,9 @@ namespace Service.Implementations
                 }
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 user.HashedPassword = passwordHasher.HashPassword(user, defaultPassword);
+                user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
+                user.DidFirstTimeLogIn = false;
+
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
                 result.Data = defaultPassword;
@@ -485,8 +532,9 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<List<UserInformationModel>> GetAllAsync(string keyword)
+        public async Task<PagingModel> GetAll(string keyword, int pageSize, int pageIndex)
         {
+            var result = new PagingModel();
 
             var usersFilters = Builders<UserInformation>.Filter.Empty;
             if (!string.IsNullOrEmpty(keyword))
@@ -496,8 +544,11 @@ namespace Service.Implementations
             }
 
             var userFluent = _dbContext.Users.Find(usersFilters);
-            var result = await userFluent.ToListAsync();
-            return _mapper.Map<List<UserInformation>, List<UserInformationModel>>(result);
+
+            result.TotalPages = (int)Math.Ceiling((double)await userFluent.CountDocumentsAsync() / pageSize);
+            result.Data = _mapper.Map<List<UserInformation>, List<UserInformationModel>>(await userFluent.Skip(pageSize * pageIndex).Limit(pageSize).ToListAsync());
+
+            return result;
         }
 
         public List<RoleModel> GetRoles(string userId)
@@ -579,7 +630,6 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-
                 if (!string.IsNullOrEmpty(model.PhoneNumber))
                 {
                     var user = await _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefaultAsync();
@@ -674,7 +724,12 @@ namespace Service.Implementations
                 var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username).FirstOrDefaultAsync();
 
                 var passwordHasher = new PasswordHasher<UserInformation>();
-                var update = await _dbContext.Users.UpdateOneAsync(i => i.NormalizedUsername == username, Builders<UserInformation>.Update.Set(x => x.HashedPassword, passwordHasher.HashPassword(user, model.NewPassword)));
+
+                user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
+                user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
+                user.DateUpdated = DateTime.Now;
+
+                var update = await _dbContext.Users.ReplaceOneAsync(i => i.NormalizedUsername == username, user);
 
                 result.Succeed = update.ModifiedCount == 1;
             }
@@ -718,6 +773,119 @@ namespace Service.Implementations
             return result;
         }
 
+        public async Task<ResultModel> ValidateTokenCredential(string userId, string hashedCredential)
+        {
+            var result = new ResultModel();
+            if (string.IsNullOrEmpty(hashedCredential))
+            {
+                result.ErrorMessage = "Invalid credential";
+                return result;
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                result.ErrorMessage = "Invalid userId";
+                return result;
+            }
+
+            try
+            {
+                var user = await _dbContext.Users.Find(i => i.Id == userId).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    result.ErrorMessage = "Invalid user";
+                    return result;
+                }
+
+                if (user.IsDisabled == true)
+                {
+                    result.ErrorMessage = "User is disabled";
+                    return result;
+                }
+
+                if (hashedCredential != user.HashedCredential)
+                {
+                    result.ErrorMessage = "Invalid token";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+
+            return result;
+        }
+
+        public void UpdateTokenCredentail()
+        {
+            var users = _dbContext.Users.Find(i => true).ToList();
+
+            users.AsParallel().ForAll(user =>
+            {
+                var pswHasher = new PasswordHasher<UserInformation>();
+
+                var credential = $"{user.NormalizedUsername}.{user.HashedPassword}";
+                user.HashedCredential = pswHasher.HashPassword(user, credential);
+
+                _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
+            });
+
+        }
+
+        public ResultModel DisableUser(string userId)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                }
+                else
+                {
+                    user.IsDisabled = true;
+                    user.DateUpdated = DateTime.Now;
+
+                    _dbContext.Users.ReplaceOne(i => i.Id == userId, user);
+                    result.Succeed = true;
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
+
+        public ResultModel EnableUser(string userId)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                }
+                else
+                {
+                    user.IsDisabled = false;
+                    user.DateUpdated = DateTime.Now;
+
+                    _dbContext.Users.ReplaceOne(i => i.Id == userId, user);
+                    result.Succeed = true;
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+            }
+            return result;
+        }
         public async Task<ResultModel> GetUserInfoAsync(string username)
         {
             var result = new ResultModel();
@@ -730,7 +898,7 @@ namespace Service.Implementations
                     throw new Exception("User is not exist!");
                 }
                 var userInfo = _mapper.Map<UserInformation, UserInformationModel>(user);
-                var permissions = GetPermissions(new PermissionQuery() { Type = "UiPermission" }, user);
+                var permissions = GetPermissions(user, 1);
 
                 result.Data = new UserInformationWithPermissionsModel() { Permissions = permissions, UserInfo = userInfo };
                 result.Succeed = true;

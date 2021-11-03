@@ -9,6 +9,9 @@ namespace Service.MappingProfiles
         public GroupMappingProfile()
         {
             CreateMap<Group, GroupModel>();
+            CreateMap<Group, GroupOverviewModel>();
+            CreateMap<GroupUpdateModel, Group>();
+
         }
     }
 }

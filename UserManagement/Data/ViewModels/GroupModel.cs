@@ -2,6 +2,13 @@
 
 namespace Data.ViewModels
 {
+    public class GroupOverviewModel
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
+
     public class GroupModel
     {
         public string Name { get; set; }

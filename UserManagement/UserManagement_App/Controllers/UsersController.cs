@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using UserManagement_App.Extensions;
 
@@ -25,14 +24,19 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync(string keyword)
+        public async Task<IActionResult> GetAll(string username, int? pageIndex, int? pageSize)
         {
-            var users = await _userService.GetAllAsync(keyword);
-            return Ok(users);
+            if (!pageIndex.HasValue)
+            {
+                pageIndex = 0;
+            }
+            if (!pageSize.HasValue || pageSize.Value == 0) pageSize = 20;
+
+            var result = await _userService.GetAll(username, pageSize.Value, pageIndex.Value);
+            return Ok(result);
+
         }
-        /// <summary>
-        /// If Creating User Successfully, A Profile of user will be created
-        /// </summary>
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> CreateAsync([FromBody] UserCreateModel model)
@@ -47,7 +51,14 @@ namespace UserManagement_App.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var result = await _userService.Login(model);
-            if (result.Succeed) return Ok(result.Data);
+            if (result.Succeed == true && result.ErrorMessage == "426")
+            {
+                return StatusCode(426, result.Data);
+            }
+            else if (result.Succeed && string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                return Ok(result.Data);
+            }
             return BadRequest(result.ErrorMessage);
         }
 
@@ -57,7 +68,7 @@ namespace UserManagement_App.Controllers
             var userId = User.GetId();
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
             var result = _userService.ChangePassword(model, User.GetId());
-            if (result.Succeed) return Ok();
+            if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
         [HttpPut()]
@@ -74,7 +85,7 @@ namespace UserManagement_App.Controllers
         public IActionResult ResetDefault(string username)
         {
             var result = _userService.ResetDefaultPassword(username);
-            if (result.Succeed) return Ok(result);
+            if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
 
@@ -177,6 +188,17 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
+        [HttpGet("ValidateCredential")]
+        public async Task<IActionResult> ValidateCredential()
+        {
+            var userId = User.GetId();
+            var credential = User.GetCredential();
+
+            var result = await _userService.ValidateTokenCredential(userId, credential);
+            if (result.Succeed) return Ok();
+            return Unauthorized();
+        }
+
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
         {
@@ -188,6 +210,28 @@ namespace UserManagement_App.Controllers
         public async Task<IActionResult> ChangeSecurityQuestionAnswer([FromBody] ChangeSecurityQuestionAnswerModel model)
         {
             var result = await _userService.ChangeSecurityQuestionAnswer(model, User?.FindFirst("Username")?.Value);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPut("Tools/UpdateCredentials")]
+        public void UpdateCredentials()
+        {
+            _userService.UpdateTokenCredentail();
+        }
+
+        [HttpPut("{id}/Disable")]
+        public IActionResult DisableUser(string id)
+        {
+            var result = _userService.DisableUser(id);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPut("{id}/Enable")]
+        public IActionResult EnableUser(string id)
+        {
+            var result = _userService.EnableUser(id);
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }

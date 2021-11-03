@@ -5,10 +5,10 @@ namespace Service.Interfaces
 {
     public interface IGroupService
     {
-        ICollection<GroupUpdateModel> GetAll();
+        ICollection<GroupOverviewModel> GetAll();
         GroupModel Get(string id);
         ResultModel Create(GroupCreateModel model);
-        ResultModel Update(GroupUpdateModel model);
+        ResultModel Update(string groupId, GroupUpdateModel model);
         ResultModel Delete(string groupId);
 
         ResultModel AddUsers(string groupId, List<string> userIds);

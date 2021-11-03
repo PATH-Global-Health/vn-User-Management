@@ -8,7 +8,7 @@ namespace Service.Interfaces
         ICollection<RoleModel> GetAll();
         RoleModel Get(string id);
         ResultModel Create(RoleCreateModel model);
-        ResultModel Update(RoleModel model);
+        ResultModel Update(string roleId, RoleUpdateModel model);
         ResultModel Delete(string roleId);
 
         ResultModel AddUsers(string roleId, List<string> userIds);

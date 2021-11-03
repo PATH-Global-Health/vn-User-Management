@@ -42,6 +42,22 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
+        [HttpPut("{id}")]
+        public IActionResult Put([FromBody] RoleUpdateModel model, string id)
+        {
+            var result = _roleService.Update(id, model);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(string id)
+        {
+            var result = _roleService.Delete(id);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
+
         [HttpPut("{id}/Users")]
         public IActionResult AddUsers([FromBody] AddUsersToRoleModel model, [FromRoute] string id)
         {

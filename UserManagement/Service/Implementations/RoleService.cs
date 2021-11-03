@@ -73,9 +73,45 @@ namespace Service.Implementations
         public ResultModel Delete(string roleId)
         {
             var result = new ResultModel();
-            _dbContext.Roles.FindOneAndDelete(i => i.Id == roleId);
-            result.Succeed = true;
+            var session = _dbContext.StartSession(); session.StartTransaction();
+            try
+            {
+                var role = _dbContext.Roles.FindOneAndDelete(session, i => i.Id == roleId);
+                if (role != null)
+                {
+                    role.GroupIds.AsParallel().ForAll(groupId =>
+                    {
+                        var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                        if (group != null)
+                        {
+                            group.RoleIds.Remove(role.Id);
+                            _dbContext.Groups.ReplaceOne(session, i => i.Id == group.Id, group);
+                        }
+                    });
 
+                    role.UserIds.AsParallel().ForAll(userId =>
+                    {
+                        var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                        if (user != null)
+                        {
+                            user.RoleIds.Remove(role.Id);
+                            _dbContext.Users.ReplaceOne(session, i => i.Id == user.Id, user);
+                        }
+                    });
+                }
+
+                session.CommitTransaction();
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+                session.AbortTransaction();
+            }
+            finally
+            {
+                session.Dispose();
+            }
             return result;
         }
 
@@ -139,16 +175,16 @@ namespace Service.Implementations
             return result;
         }
 
-        public ResultModel Update(RoleModel model)
+        public ResultModel Update(string roleId, RoleUpdateModel model)
         {
             var result = new ResultModel();
             try
             {
-                var roles = _dbContext.Roles.Find(i => i.Id == model.Id).FirstOrDefault();
+                var roles = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
                 if (roles != null)
                 {
                     roles = _mapper.Map(model, roles);
-                    _dbContext.Roles.FindOneAndReplace(i => i.Id == model.Id, roles);
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == roleId, roles);
                     result.Succeed = true;
                 }
                 else

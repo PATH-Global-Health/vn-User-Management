@@ -1,16 +1,16 @@
-﻿using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Service.Interfaces;
-using Data.ViewModels;
-using System.Text;
+﻿using Data.ViewModels;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Service.Interfaces;
+using System;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Service.RabbitMQ
 {
@@ -43,7 +43,7 @@ namespace Service.RabbitMQ
                 channel = connection.CreateModel();
 
                 channel.QueueDeclare(queue: queue, durable: false,
-                    exclusive: false, autoDelete: false, arguments: null);
+                  exclusive: false, autoDelete: false, arguments: null);
 
                 //channel.BasicQos(0, 1, false);
 

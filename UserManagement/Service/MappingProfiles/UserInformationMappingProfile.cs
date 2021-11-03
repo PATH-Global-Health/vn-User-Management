@@ -7,7 +7,8 @@ namespace Service.MappingProfiles
     {
         public UserInformationMappingProfile()
         {
-            CreateMap<UserInformation, UserInformationModel>();
+            CreateMap<UserInformation, UserInformationModel>()
+                .ForMember(i => i.IsDisabled, map => map.MapFrom(dm => dm.IsDisabled.HasValue ? dm.IsDisabled.Value : false));
         }
     }
 }

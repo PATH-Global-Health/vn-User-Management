@@ -1,4 +1,5 @@
-﻿using Data.Enums;
+﻿using System.Collections.Generic;
+using Data.Enums;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -66,6 +67,23 @@ namespace UserManagement_App.Controllers
         {
             return Ok();
         }
+
+
+        [HttpPut("Resource/Batch")]
+        public IActionResult CreateResourcePermissions([FromBody] List<ResourcePermissionCreateModel> models)
+        {
+            ResultModel result = _permissionsService.CreatePermissions(models);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPost("Resource/Batch")]
+        public IActionResult AddResources([FromBody] AddBatchResourcePermissionModel model)
+        {
+            ResultModel result = _permissionsService.AddPermissions(model.HolderId, model.HolderType, model.Permissions);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
         #endregion
 
         #region Ui 
@@ -85,10 +103,26 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
+        [HttpPost("Ui/Batch")]
+        public IActionResult AddUis([FromBody] AddBatchUIPermissionModel model)
+        {
+            ResultModel result = _permissionsService.AddPermissions(model.HolderId, model.HolderType, model.Permissions);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
         [HttpPut("Ui")]
         public IActionResult CreateUiPermission([FromBody] UiPermissionCreateModel model)
         {
             ResultModel result = _permissionsService.CreatePermission(model);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPut("Ui/Batch")]
+        public IActionResult CreateUiPermissions([FromBody] List<UiPermissionCreateModel> models)
+        {
+            ResultModel result = _permissionsService.CreatePermissions(models);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }

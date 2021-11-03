@@ -1,4 +1,4 @@
-﻿using Data.DataAccess;
+using Data.DataAccess;
 using Data.ViewModels;
 using Data.ViewModels.FacebookAuths;
 using Data.ViewModels.GoogleAuths;
@@ -22,6 +22,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
+
 namespace UserManagement_App.Extensions
 {
     public static class StartupExtensions
@@ -36,11 +37,15 @@ namespace UserManagement_App.Extensions
             services.AddSingleton<IHostedService, Consumer>();
             services.AddSingleton<IHostedService, HomeQuarantineConsumer>();
             //services.AddHostedService<Consumer>();
+
             services.AddScoped<IProvincialService, ProvincialService>();
             services.AddScoped<ISecurityQuestionService, SecurityQuestionService>();
             services.AddScoped<IMailService, MailService>();
             services.AddScoped<IApiModuleService, ApiModuleService>();
 
+            //services.AddSingleton<IHostedService, Consumer>();
+            //services.AddHostedService<PermissionRpcServer>();
+            //services.AddHostedService<TokenValidationRpcServer>();
             services.AddScoped<IVerifyUserPublisher, VerifyUserPublisher>();
 
             var facebookAuthSettings = new FacebookAuthSettings();
@@ -64,7 +69,7 @@ namespace UserManagement_App.Extensions
             services.AddOpenApiDocument(document =>
             {
                 document.Title = "User Management";
-                document.Version = "3.1";
+                document.Version = "4.2";
                 document.AddSecurity("JWT", Enumerable.Empty<string>(), new OpenApiSecurityScheme
                 {
                     Type = OpenApiSecuritySchemeType.ApiKey,

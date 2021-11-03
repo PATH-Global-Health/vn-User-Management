@@ -1,5 +1,6 @@
 ﻿using Data.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace Data.ViewModels
 {
@@ -56,9 +57,23 @@ namespace Data.ViewModels
         public string HolderId { get; set; }
     }
 
+    public class AddBatchResourcePermissionModel
+    {
+        public List<ResourcePermissionCreateModel> Permissions { get; set; } = new List<ResourcePermissionCreateModel>();
+        public HolderType HolderType { get; set; }
+        public string HolderId { get; set; }
+    }
+
     public class AddUiPermissionModel
     {
         public UiPermissionCreateModel Permission { get; set; }
+        public HolderType HolderType { get; set; }
+        public string HolderId { get; set; }
+    }
+
+    public class AddBatchUIPermissionModel
+    {
+        public List<UiPermissionCreateModel> Permissions { get; set; } = new List<UiPermissionCreateModel>();
         public HolderType HolderType { get; set; }
         public string HolderId { get; set; }
     }
@@ -70,5 +85,11 @@ namespace Data.ViewModels
         /// </summary>
         public string ApiPath { get; set; }
         public string Method { get; set; }
+    }
+
+    public class MQPermissionValidationMessageModel
+    {
+        public ResourcePermissionValidationModel ValidationModel { get; set; }
+        public string UserId { get; set; }
     }
 }

@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Data.Enums;
+﻿using Data.Enums;
 using Data.ViewModels;
+using System.Collections.Generic;
 
 namespace Service.Interfaces
 {
@@ -16,10 +16,16 @@ namespace Service.Interfaces
 
         List<ResourcePermissionModel> GetResourcePermissions(string holderId, HolderType holder);
         List<UiPermissionModel> GetUiPermissions(string holderId, HolderType holder);
+        List<UiPermissionModel> GetUserUiPermissions(string userId);
         ResultModel GetAllResourcePermission();
         ResultModel GetAllUiPermission();
 
         ResultModel Validate(ResourcePermissionValidationModel model, string userId);
-        List<UiPermissionModel> GetUserUiPermissions(string userId);
+
+        ResultModel AddPermissions(string holderId, HolderType holderType, List<UiPermissionCreateModel> permissions);
+        ResultModel AddPermissions(string holderId, HolderType holderType, List<ResourcePermissionCreateModel> permissions);
+
+        ResultModel CreatePermissions(List<UiPermissionCreateModel> models);
+        ResultModel CreatePermissions(List<ResourcePermissionCreateModel> models);
     }
 }

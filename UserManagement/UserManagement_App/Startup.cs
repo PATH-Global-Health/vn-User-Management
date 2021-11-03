@@ -1,13 +1,13 @@
 using AutoMapper;
+
 using Data.DataAccess;
 using Data.ViewModels;
-using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Service.RabbitMQ;
+using Service.MappingProfiles;
 using UserManagement_App.Extensions;
 
 namespace UserManagement_App
@@ -30,7 +30,7 @@ namespace UserManagement_App
             services.ConfigCors();
             services.ConfigJwt(Configuration["Jwt:Key"], Configuration["Jwt:Issuer"], null);
             services.AddMongoDbContext(Configuration["MongoDbSettings:ConnectionString"], Configuration["MongoDbSettings:DatabaseName"]);
-            services.AddAutoMapper();
+            services.AddAutoMapper(typeof(UserInformationMappingProfile));
             services.AddLogging();
             services.AddHttpClient();
 

@@ -12,6 +12,8 @@ namespace Service.MappingProfiles
 
             CreateMap<RoleCreateModel, Role>()
                 ;
+
+            CreateMap<RoleUpdateModel, Role>();
         }
     }
 }

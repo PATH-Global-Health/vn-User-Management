@@ -11,7 +11,7 @@ namespace Service.Interfaces
         bool IsEmailAvailable(string email);
         bool IsPhoneNumberAvailable(string phoneNumber);
 
-        Task<List<UserInformationModel>> GetAllAsync(string keyword);
+        Task<PagingModel> GetAll(string name, int pageSize, int pageIndex);
         Task<ResultModel> Create(UserCreateModel model);
         Task<ResultModel> Login(LoginModel model);
         Task<ResultModel> AnonymousLogin();
@@ -33,6 +33,12 @@ namespace Service.Interfaces
 
         List<RoleModel> GetRoles(string userId);
         List<GroupModel> GetGroups(string userId);
+
+        ResultModel DisableUser(string userId);
+        ResultModel EnableUser(string userId);
+
+        Task<ResultModel> ValidateTokenCredential(string userId, string hashedCredential);
+        void UpdateTokenCredentail();
         Task<ResultModel> LoginWithFacebookAsync(string accessToken);
         Task<ResultModel> LoginWithGoogleAsync(string idToken);
         Task<ResultModel> IsConfirmdUser(string username);

@@ -21,10 +21,10 @@ namespace Service.Implementations
             _mapper = mapper;
         }
 
-        public ICollection<GroupUpdateModel> GetAll()
+        public ICollection<GroupOverviewModel> GetAll()
         {
             var groups = _dbContext.Groups.Find(i => true).ToList();
-            return _mapper.Map<List<Group>, List<GroupUpdateModel>>(groups);
+            return _mapper.Map<List<Group>, List<GroupOverviewModel>>(groups);
         }
         public GroupModel Get(string id)
         {
@@ -63,16 +63,16 @@ namespace Service.Implementations
 
             return result;
         }
-        public ResultModel Update(GroupUpdateModel model)
+        public ResultModel Update(string groupId, GroupUpdateModel model)
         {
             var result = new ResultModel();
             try
             {
-                var group = _dbContext.Groups.Find(i => i.Id == model.Id).FirstOrDefault();
+                var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
                 if (group != null)
                 {
                     group = _mapper.Map(model, group);
-                    _dbContext.Groups.FindOneAndReplace(i => i.Id == model.Id, group);
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == groupId, group);
                     result.Succeed = true;
                 }
                 else
@@ -86,33 +86,52 @@ namespace Service.Implementations
             }
             return result;
         }
+
         public ResultModel Delete(string groupId)
         {
             var result = new ResultModel();
+            var session = _dbContext.StartSession(); session.StartTransaction();
             try
             {
-                var group = _dbContext.Groups.FindOneAndDelete(i => i.Id == groupId);
-                foreach (var roleId in group.RoleIds)
+                var group = _dbContext.Groups.FindOneAndDelete(session, i => i.Id == groupId);
+                if (group != null)
                 {
-                    var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
-                    role.GroupIds.Remove(group.Id);
-                    _dbContext.Roles.ReplaceOne(i => i.Id == role.Id, role);
+                    group.RoleIds.AsParallel().ForAll(roleId =>
+                    {
+                        var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                        if (role != null)
+                        {
+                            role.GroupIds.Remove(group.Id);
+                            _dbContext.Roles.ReplaceOne(session, i => i.Id == role.Id, role);
+                        }
+                    });
+
+                    group.UserIds.AsParallel().ForAll(userId =>
+                    {
+                        var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                        if (user != null)
+                        {
+                            user.GroupIds.Remove(group.Id);
+                            _dbContext.Users.ReplaceOne(session, i => i.Id == user.Id, user);
+                        }
+                    });
                 }
 
-                foreach (var userId in group.UserIds)
-                {
-                    var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
-                    user.GroupIds.Remove(group.Id);
-                    _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
-                }
+                session.CommitTransaction();
                 result.Succeed = true;
             }
             catch (Exception e)
             {
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+                session.AbortTransaction();
+            }
+            finally
+            {
+                session.Dispose();
             }
             return result;
         }
+
         public ResultModel AddUsers(string groupId, List<string> userIds)
         {
             ResultModel result = new ResultModel();

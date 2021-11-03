@@ -15,5 +15,15 @@ namespace UserManagement_App.Extensions
             return "";
         }
 
+        public static string GetCredential(this ClaimsPrincipal user)
+        {
+            var credentialClaim = user.Claims.FirstOrDefault(i => i.Type.Equals("Credential"));
+            if (credentialClaim != null)
+            {
+                return credentialClaim.Value;
+            }
+            return "";
+        }
+
     }
 }

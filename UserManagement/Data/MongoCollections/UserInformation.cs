@@ -13,6 +13,7 @@ namespace Data.MongoCollections
         public string Username { get; set; }
         public string NormalizedUsername { get; set; }
         public string HashedPassword { get; set; }
+        public string HashedCredential { get; set; }
 
         public string Email { get; set; }
         public string NormalizedEmail { get; set; }
@@ -30,6 +31,7 @@ namespace Data.MongoCollections
         /// References to Provincial Info
         /// </summary>
         public List<string> ProvincialInformation { get; set; } = new List<string>();
+        public bool? DidFirstTimeLogIn { get; set; }
 
         public List<string> UiPermissionIds { get; set; } = new List<string>();
         public List<string> ResourcePermissionIds { get; set; } = new List<string>();
@@ -38,5 +40,7 @@ namespace Data.MongoCollections
         public DateTime DateCreated { get; set; } = DateTime.Now;
         [BsonDateTimeOptions]
         public DateTime DateUpdated { get; set; } = DateTime.Now;
+
+        public bool? IsDisabled { get; set; } = false;
     }
 }

@@ -5,11 +5,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.11.0" />
-    <PackageReference Include="MongoDB.Bson" Version="2.11.0" />
+    <Folder Include="DataAccess\" />
+    <Folder Include="MongoCollections\" />
+    <Folder Include="Enums\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DataAccess\" />
-    <Folder Include="Enums\" />
+    <None Remove="MongoDB.Bson" />
+    <None Remove="MongoDB.Driver" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Bson" Version="2.13.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.13.0" />
   </ItemGroup>
 </Project>

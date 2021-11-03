@@ -1,5 +1,4 @@
 ﻿using Data.ViewModels;
-using System;
 using System.Threading.Tasks;
 
 namespace Service.Interfaces

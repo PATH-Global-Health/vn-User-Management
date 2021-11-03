@@ -35,6 +35,7 @@ namespace Data.ViewModels
         public string PhoneNumber { get; set; }
         public string FullName { get; set; }
         public bool IsConfirmed { get; set; }
+        public bool IsDisabled { get; set; }
     }
 
     public class PermissionQuery

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Data.ViewModels
 {
@@ -16,6 +14,7 @@ namespace Data.ViewModels
         public string UserId { get; set; }
         public string Username { get; set; }
         public int Expires_in { get; set; }
-        public List<Permission> Permissions { get; set; }
+        public List<Permission> ResourcePermissions { get; set; } = new List<Permission>();
+        public List<Permission> UiPermissions { get; set; } = new List<Permission>();
     }
 }
