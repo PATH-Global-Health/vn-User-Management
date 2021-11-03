@@ -347,10 +347,10 @@ namespace Service.Implementations
 
                 var accessToken = GetAccessToken(user, model.PermissionQuery);
 
-                if (user.DidFirstTimeLogIn == null || user.DidFirstTimeLogIn == false)
-                {
-                    result.ErrorMessage = "426";
-                }
+                //if (user.DidFirstTimeLogIn == null || user.DidFirstTimeLogIn == false)
+                //{
+                //    result.ErrorMessage = "426";
+                //}
 
                 result.Data = accessToken;
                 result.Succeed = true;
