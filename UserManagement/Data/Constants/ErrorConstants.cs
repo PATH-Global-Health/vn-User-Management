@@ -11,6 +11,7 @@ namespace Data.Constants
         public const string UNVERIFIED_USER = "UNVERIFIED_USER";
         public const string EXISTED_USERNAME = "EXISTED_USERNAME";
         public const string EXISTED_EMAIL = "EXISTED_EMAIL";
+        public const string NULL_PASSWORD = "NULL_PASSWORD";
         public const string EXISTED_PHONENUMBER = "EXISTED_PHONENUMBER";
         public const string NOT_EXISTED_PHONENUMBER = "NOT_EXISTED_PHONENUMBER";
         public const string INCORRECT_USERNAME_PASSWORD = "INCORRECT_USERNAME_PASSWORD";

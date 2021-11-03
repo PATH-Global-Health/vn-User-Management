@@ -59,6 +59,11 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
+                if (string.IsNullOrEmpty(model.NewPassword))
+                {
+                    result.ErrorMessage = ErrorConstants.NULL_PASSWORD;
+                    return result;
+                }
                 var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
                 if (user == null)
                 {
@@ -131,6 +136,11 @@ namespace Service.Implementations
             try
             {
                 #region Keys validation
+                if (string.IsNullOrEmpty(model.Password))
+                {
+                    result.ErrorMessage = ErrorConstants.NULL_PASSWORD;
+                    return result;
+                }
                 if (!IsEmailAvailable(model.Email))
                 {
                     //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
