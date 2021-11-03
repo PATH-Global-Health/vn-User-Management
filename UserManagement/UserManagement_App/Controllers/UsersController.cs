@@ -2,6 +2,7 @@
 using Data.ViewModels.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Service.Helper;
 using Service.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -41,6 +42,12 @@ namespace UserManagement_App.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAsync([FromBody] UserCreateModel model)
         {
+            if (!ModelState.IsValid
+                || !StringHelper.IsPhoneNumber(model.PhoneNumber)
+                || !StringHelper.IsValidEmail(model.Email))
+            {
+                return BadRequest();
+            }
             var result = await _userService.Create(model);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
@@ -74,6 +81,11 @@ namespace UserManagement_App.Controllers
         [HttpPut()]
         public async Task<IActionResult> UpdateInfoAsync([FromBody] UserUpdateModel model)
         {
+            if (!ModelState.IsValid
+           || !StringHelper.IsPhoneNumber(model.PhoneNumber))
+            {
+                return BadRequest();
+            }
             var userId = User.GetId();
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
             var result = await _userService.UpdateUser(model, User.GetId());

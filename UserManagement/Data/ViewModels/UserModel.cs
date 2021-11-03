@@ -10,7 +10,9 @@ namespace Data.ViewModels
         public string Username { get; set; }
         public string Password { get; set; }
 
+        [DataType(DataType.EmailAddress)]
         public string Email { get; set; } = "";
+        [DataType(DataType.PhoneNumber)]
         public string PhoneNumber { get; set; } = "";
         public string FullName { get; set; } = "";
     }
