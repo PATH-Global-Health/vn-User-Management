@@ -141,6 +141,11 @@ namespace Service.Implementations
                     result.ErrorMessage = ErrorConstants.NULL_PASSWORD;
                     return result;
                 }
+                if (string.IsNullOrEmpty(model.Username))
+                {
+                    result.ErrorMessage = ErrorConstants.NULL_USERNAME;
+                    return result;
+                }
                 if (!IsEmailAvailable(model.Email))
                 {
                     //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
