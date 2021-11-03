@@ -447,7 +447,7 @@ namespace Service.Implementations
                     var permissionFilters = Builders<UiPermission>.Filter.Eq(i => i.Type, Data.Enums.PermissionType.Allow) & Builders<UiPermission>.Filter.In(i => i.Id, user.UiPermissionIds);
                     var permissions = _dbContext.UiPermissions.Find(permissionFilters).ToList();
 
-                    results = permissions.AsParallel().Select(i => new Permission { Code = i.Id }).ToList();
+                    results = permissions.AsParallel().Select(i => new Permission { Code = i.Code }).ToList();
                 }
             }
 
