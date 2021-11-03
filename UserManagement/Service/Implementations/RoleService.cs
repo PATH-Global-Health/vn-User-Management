@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
@@ -55,7 +56,7 @@ namespace Service.Implementations
             var existedRole = _dbContext.Roles.Find(i => i.NormalizedName == model.Name.ToUpper()).FirstOrDefault();
             if (existedRole != null)
             {
-                result.ErrorMessage = "Role is existed";
+                result.ErrorMessage = ErrorConstants.EXISTED_ROLE;
                 return result;
             }
             var newRole = new Role
@@ -164,7 +165,9 @@ namespace Service.Implementations
                 var role = _dbContext.Roles.Find(g => g.Id == roleId).FirstOrDefault();
                 role.UserIds.Remove(userId);
                 _dbContext.Roles.ReplaceOne(g => g.Id == roleId, role);
-
+                var user = _dbContext.Users.Find(x => x.Id == userId).FirstOrDefault();
+                user.RoleIds.Remove(roleId);
+                _dbContext.Users.ReplaceOne(x => x.Id == userId, user);
                 result.Succeed = true;
             }
             catch (Exception e)

@@ -66,7 +66,7 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpPut("{id}/Users/{userId}")]
+        [HttpDelete("{id}/Users/{userId}")]
         public IActionResult AddUsers([FromRoute] string id, [FromRoute] string userId)
         {
             var result = _roleService.RemoveUser(id, userId);

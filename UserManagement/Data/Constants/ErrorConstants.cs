@@ -11,6 +11,8 @@ namespace Data.Constants
         public const string UNVERIFIED_USER = "UNVERIFIED_USER";
         public const string EXISTED_USERNAME = "EXISTED_USERNAME";
         public const string EXISTED_EMAIL = "EXISTED_EMAIL";
+        public const string EXISTED_ROLE = "EXISTED_ROLE";
+        public const string EXISTED_GROUP = "EXISTED_GROUP";
         public const string NULL_USERNAME = "NULL_USERNAME";
         public const string NULL_PASSWORD = "NULL_PASSWORD";
         public const string EXISTED_PHONENUMBER = "EXISTED_PHONENUMBER";
@@ -20,6 +22,6 @@ namespace Data.Constants
         public const string REQUIRED_PHONE_NUMBER = "REQUIRED_PHONE_NUMBER";
         public const string INCORRECT_OTP = "INCORRECT_OTP";
         public const string UNDEFINED_PHONENUMBER = "UNDEFINED_PHONENUMBER";
-        public const string IS_CONFIRMED= "IS_CONFIRMED";
+        public const string IS_CONFIRMED = "IS_CONFIRMED";
     }
 }

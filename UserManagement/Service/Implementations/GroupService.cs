@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
@@ -47,7 +48,7 @@ namespace Service.Implementations
             var existedGroup = _dbContext.Groups.Find(i => i.NormalizedName == model.Name.ToUpper()).FirstOrDefault();
             if (existedGroup != null)
             {
-                result.ErrorMessage = "Group is existed";
+                result.ErrorMessage = ErrorConstants.EXISTED_GROUP;
                 return result;
             }
             var newGroup = new Group
@@ -176,6 +177,10 @@ namespace Service.Implementations
                 var group = _dbContext.Groups.Find(g => g.Id == groupId).FirstOrDefault();
                 group.UserIds.Remove(userId);
                 _dbContext.Groups.ReplaceOne(g => g.Id == groupId, group);
+
+                var user = _dbContext.Users.Find(x => x.Id == userId).FirstOrDefault();
+                user.GroupIds.Remove(groupId);
+                _dbContext.Users.ReplaceOne(x => x.Id == userId, user);
 
                 result.Succeed = true;
             }
