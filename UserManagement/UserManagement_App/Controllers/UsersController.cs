@@ -44,7 +44,7 @@ namespace UserManagement_App.Controllers
         {
             if (!ModelState.IsValid
                 || !StringHelper.IsPhoneNumber(model.PhoneNumber)
-                || !StringHelper.IsValidEmail(model.Email))
+                || (!string.IsNullOrEmpty(model.Email) && !StringHelper.IsValidEmail(model.Email)))
             {
                 return BadRequest();
             }
