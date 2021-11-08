@@ -82,7 +82,8 @@ namespace UserManagement_App.Controllers
         public async Task<IActionResult> UpdateInfoAsync([FromBody] UserUpdateModel model)
         {
             if (!ModelState.IsValid
-           || !StringHelper.IsPhoneNumber(model.PhoneNumber))
+           || (!string.IsNullOrEmpty(model.PhoneNumber) && !StringHelper.IsPhoneNumber(model.PhoneNumber)) ||
+           (!string.IsNullOrEmpty(model.Email) && !StringHelper.IsValidEmail(model.Email)))
             {
                 return BadRequest();
             }
@@ -175,6 +176,20 @@ namespace UserManagement_App.Controllers
             return Ok(roles);
         }
 
+        [HttpPost("SendUpdateUserOTP")]
+        public async Task<IActionResult> SendUpdateUserOTP([FromBody] SendOTPRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var login = await _userService.SendUpdateUserOTP(request, User?.FindFirst("Username")?.Value);
+            if (login.Succeed)
+            {
+                return Ok(login.Data);
+            }
+            return BadRequest(login.ErrorMessage);
+        }
         [AllowAnonymous]
         [HttpPost("ResetPassword/GenerateOTP")]
         public async Task<IActionResult> GenerateResetPasswordOTPAsync([FromBody] GenerateResetPasswordOTPModel model)

@@ -119,10 +119,38 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                         return result;
                     }
-                    user.PhoneNumber = model.PhoneNumber;
+                    if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    {
+                        result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
+                    }
+                    else
+                    {
+                        user.PhoneNumber = model.PhoneNumber;
+                        user.OTP = null;
+                        await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
+                        result.Succeed = true;
+                    }
                 }
-                await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
-                result.Succeed = true;
+                if (!string.IsNullOrEmpty(model.Email))
+                {
+                    var existEmail = await _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefaultAsync();
+                    if (existEmail != null)
+                    {
+                        result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
+                        return result;
+                    }
+                    if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    {
+                        result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
+                    }
+                    else
+                    {
+                        user.Email = model.Email;
+                        user.OTP = null;
+                        await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
+                        result.Succeed = true;
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -593,6 +621,59 @@ namespace Service.Implementations
             return result;
         }
 
+        public async Task<ResultModel> SendUpdateUserOTP(SendOTPRequest request, string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var otp = OTPHepler.GenerateOTP();
+                var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
+                       Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                if (updateResult.ModifiedCount != 0)
+                {
+                    if (!string.IsNullOrEmpty(request.PhoneNumber))
+                    {
+                        var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == request.PhoneNumber).FirstOrDefaultAsync();
+                        if (existPhoneNumber != null)
+                        {
+                            result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
+                            return result;
+                        }
+                        var smsResponse = await _smsService.SendOTP(otp.Value, request.PhoneNumber);
+                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                        {
+                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                        }
+                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
+                    }
+                    else if (!string.IsNullOrEmpty(request.Email))
+                    {
+                        var existEmail = await _dbContext.Users.Find(i => i.Email == request.Email).FirstOrDefaultAsync();
+                        if (existEmail != null)
+                        {
+                            result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
+                            return result;
+                        }
+                        var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                        {
+                            To = request.Email,
+                            Subject = $"Update User for USAID",
+                            Text = $"Follow this OTP to update User: {otp.Value}"
+                        });
+                        result.Succeed = isMailSent;
+                    }
+                }
+                else
+                {
+                    result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
+                }
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
         public async Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model)
         {
             var result = new ResultModel();
@@ -605,7 +686,8 @@ namespace Service.Implementations
                         Builders<UserInformation>.Update.Set(x => x.OTP, otp));
                     if (updateResult.ModifiedCount != 0)
                     {
-                        result.Succeed = true;
+                        var isSentResult = await SendOTPVerification(model.PhoneNumber);
+                        result.Succeed = isSentResult.Succeed;
                     }
                     else
                     {

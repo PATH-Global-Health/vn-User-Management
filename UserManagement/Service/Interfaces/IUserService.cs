@@ -25,6 +25,7 @@ namespace Service.Interfaces
         Task<ResultModel> SendOTPVerification(string phoneNumber);
         Task<ResultModel> VerifyOTPOfPhoneNumber(VerifyOTPOfPhoneNumberRequest request);
         Task<ResultModel> ChangeSecurityQuestionAnswer(ChangeSecurityQuestionAnswerModel model, string username);
+        Task<ResultModel> SendUpdateUserOTP(SendOTPRequest request, string username);
         Task<ResultModel> GenerateResetPasswordOTP(GenerateResetPasswordOTPModel model);
         Task<ResultModel> ConfirmResetPasswordOTP(ConfirmResetPasswordOTPModel model);
         Task<ResultModel> ConfirmResetPasswordSecurityQuestion(ConfirmResetPasswordSecurityQuestionModel model);
