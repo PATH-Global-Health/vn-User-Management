@@ -74,10 +74,9 @@ namespace Service.Implementations
         public ResultModel Delete(string roleId)
         {
             var result = new ResultModel();
-            var session = _dbContext.StartSession(); session.StartTransaction();
             try
             {
-                var role = _dbContext.Roles.FindOneAndDelete(session, i => i.Id == roleId);
+                var role = _dbContext.Roles.FindOneAndDelete(i => i.Id == roleId);
                 if (role != null)
                 {
                     role.GroupIds.AsParallel().ForAll(groupId =>
@@ -86,7 +85,7 @@ namespace Service.Implementations
                         if (group != null)
                         {
                             group.RoleIds.Remove(role.Id);
-                            _dbContext.Groups.ReplaceOne(session, i => i.Id == group.Id, group);
+                            _dbContext.Groups.ReplaceOne(i => i.Id == group.Id, group);
                         }
                     });
 
@@ -96,22 +95,15 @@ namespace Service.Implementations
                         if (user != null)
                         {
                             user.RoleIds.Remove(role.Id);
-                            _dbContext.Users.ReplaceOne(session, i => i.Id == user.Id, user);
+                            _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
                         }
                     });
                 }
-
-                session.CommitTransaction();
                 result.Succeed = true;
             }
             catch (Exception e)
             {
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
-                session.AbortTransaction();
-            }
-            finally
-            {
-                session.Dispose();
             }
             return result;
         }
