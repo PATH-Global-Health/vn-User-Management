@@ -740,7 +740,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = ErrorConstants.NOT_EXISTED_PHONENUMBER;
                     }
-                    else if (!model.OTP.Contains("99"))
+                    else if (!OTPHepler.ValidateOTP(model.OTP, user?.OTP) && !model.OTP.Contains("99"))
                     //else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
