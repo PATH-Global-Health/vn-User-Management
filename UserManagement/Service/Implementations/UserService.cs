@@ -686,8 +686,12 @@ namespace Service.Implementations
                         Builders<UserInformation>.Update.Set(x => x.OTP, otp));
                     if (updateResult.ModifiedCount != 0)
                     {
-                        var isSentResult = await SendOTPVerification(model.PhoneNumber);
-                        result.Succeed = isSentResult.Succeed;
+                        var smsResponse = await _smsService.SendOTP(otp.Value, model.PhoneNumber);
+                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                        {
+                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                        }
+                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
                     }
                     else
                     {
