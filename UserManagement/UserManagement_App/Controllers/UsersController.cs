@@ -43,7 +43,7 @@ namespace UserManagement_App.Controllers
         public async Task<IActionResult> CreateAsync([FromBody] UserCreateModel model)
         {
             if (!ModelState.IsValid
-                || !StringHelper.IsPhoneNumber(model.PhoneNumber)
+                || (!string.IsNullOrEmpty(model.PhoneNumber) && !StringHelper.IsPhoneNumber(model.PhoneNumber))
                 || (!string.IsNullOrEmpty(model.Email) && !StringHelper.IsValidEmail(model.Email)))
             {
                 return BadRequest();
