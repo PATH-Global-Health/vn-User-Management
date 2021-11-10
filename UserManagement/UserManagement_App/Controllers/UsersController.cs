@@ -33,7 +33,7 @@ namespace UserManagement_App.Controllers
             }
             if (!pageSize.HasValue || pageSize.Value == 0) pageSize = 20;
 
-            var result = await _userService.GetAll(keyword, pageSize.Value, pageIndex.Value);
+            var result = await _userService.GetAll(keyword, pageSize, pageIndex);
             return Ok(result);
 
         }

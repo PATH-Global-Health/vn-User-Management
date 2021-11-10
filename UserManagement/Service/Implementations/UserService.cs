@@ -592,10 +592,17 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<PagingModel> GetAll(string keyword, int pageSize, int pageIndex)
+        public async Task<PagingModel> GetAll(string keyword, int? pageSize, int? pageIndex)
         {
             var result = new PagingModel();
-
+            if (!pageSize.HasValue)
+            {
+                pageSize = 20;
+            }
+            if (!pageIndex.HasValue)
+            {
+                pageIndex = 0;
+            }
             var usersFilters = Builders<UserInformation>.Filter.Empty;
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -605,8 +612,8 @@ namespace Service.Implementations
 
             var userFluent = _dbContext.Users.Find(usersFilters);
 
-            result.TotalPages = (int)Math.Ceiling((double)await userFluent.CountDocumentsAsync() / pageSize);
-            result.Data = _mapper.Map<List<UserInformation>, List<UserInformationModel>>(await userFluent.Skip(pageSize * pageIndex).Limit(pageSize).ToListAsync());
+            result.TotalPages = (int)Math.Ceiling((double)await userFluent.CountDocumentsAsync() / pageSize.Value);
+            result.Data = _mapper.Map<List<UserInformation>, List<UserInformationModel>>(await userFluent.Skip(pageSize.Value * pageIndex.Value).Limit(pageSize.Value).ToListAsync());
 
             return result;
         }
