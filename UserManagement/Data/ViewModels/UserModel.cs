@@ -15,6 +15,7 @@ namespace Data.ViewModels
         [DataType(DataType.PhoneNumber)]
         public string PhoneNumber { get; set; } = "";
         public string FullName { get; set; } = "";
+        public bool? IsElasticSynced { get; set; }
     }
 
     public class ChangePasswordModel
@@ -40,6 +41,7 @@ namespace Data.ViewModels
         public string FullName { get; set; }
         public bool IsConfirmed { get; set; }
         public bool IsDisabled { get; set; }
+        public bool? IsElasticSynced { get; set; } = false;
     }
 
     public class PermissionQuery

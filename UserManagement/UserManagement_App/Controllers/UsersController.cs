@@ -25,7 +25,7 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(string username, int? pageIndex, int? pageSize)
+        public async Task<IActionResult> GetAll(string keyword, int? pageIndex, int? pageSize)
         {
             if (!pageIndex.HasValue)
             {
@@ -33,7 +33,7 @@ namespace UserManagement_App.Controllers
             }
             if (!pageSize.HasValue || pageSize.Value == 0) pageSize = 20;
 
-            var result = await _userService.GetAll(username, pageSize.Value, pageIndex.Value);
+            var result = await _userService.GetAll(keyword, pageSize.Value, pageIndex.Value);
             return Ok(result);
 
         }

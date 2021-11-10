@@ -42,5 +42,6 @@ namespace Data.MongoCollections
         public DateTime DateUpdated { get; set; } = DateTime.Now;
 
         public bool? IsDisabled { get; set; } = false;
+        public bool? IsElasticSynced { get; set; } = false;
     }
 }

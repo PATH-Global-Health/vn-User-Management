@@ -3,8 +3,10 @@ using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
+using Data.ViewModels.ElasticSearchs;
 using Data.ViewModels.ProfileAPIs;
 using Data.ViewModels.Users;
+using Flurl.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -38,10 +40,11 @@ namespace Service.Implementations
         private readonly IMailService _mailService;
         private readonly ISMSService _smsService;
         private readonly IVerifyUserPublisher _publisher;
+        private readonly ElasticSettings _elasticSettings;
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
-                ISMSService smsService, IVerifyUserPublisher publisher)
+                ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -52,6 +55,7 @@ namespace Service.Implementations
             _googleAuthService = googleAuthService;
             _smsService = smsService;
             _publisher = publisher;
+            _elasticSettings = elasticSettings;
         }
 
         public ResultModel ChangePassword(ChangePasswordModel model, string userId)
@@ -160,23 +164,23 @@ namespace Service.Implementations
             }
             return result;
         }
-        public async Task<ResultModel> Create(UserCreateModel model)
+        public async Task<ResultModel> Create(UserCreateModel request)
         {
             var result = new ResultModel();
             try
             {
                 #region Keys validation
-                if (string.IsNullOrEmpty(model.Password))
+                if (string.IsNullOrEmpty(request.Password))
                 {
                     result.ErrorMessage = ErrorConstants.NULL_PASSWORD;
                     return result;
                 }
-                if (string.IsNullOrEmpty(model.Username))
+                if (string.IsNullOrEmpty(request.Username))
                 {
                     result.ErrorMessage = ErrorConstants.NULL_USERNAME;
                     return result;
                 }
-                if (!IsEmailAvailable(model.Email))
+                if (!IsEmailAvailable(request.Email))
                 {
                     //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
                     //if (checkVerifiedUser != null && !checkVerifiedUser.IsConfirmed)
@@ -198,12 +202,12 @@ namespace Service.Implementations
                         return result;
                     }
                 }
-                if (!IsUsernameAvailable(model.Username))
+                if (!IsUsernameAvailable(request.Username))
                 {
                     result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
                     return result;
                 }
-                if (!IsPhoneNumberAvailable(model.PhoneNumber))
+                if (!IsPhoneNumberAvailable(request.PhoneNumber))
                 {
                     result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                     return result;
@@ -213,15 +217,20 @@ namespace Service.Implementations
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 var user = new UserInformation
                 {
-                    Username = model.Username,
-                    NormalizedUsername = model.Username.ToUpper(),
-                    Email = model.Email,
-                    NormalizedEmail = string.IsNullOrEmpty(model.Email) ? "" : model.Email.ToUpper(),
-                    PhoneNumber = model.PhoneNumber,
-                    FullName = model.FullName,
+                    Username = request.Username,
+                    NormalizedUsername = request.Username.ToUpper(),
+                    Email = request.Email,
+                    NormalizedEmail = string.IsNullOrEmpty(request.Email) ? "" : request.Email.ToUpper(),
+                    PhoneNumber = request.PhoneNumber,
+                    FullName = request.FullName,
                     IsConfirmed = false,
                 };
-                user.HashedPassword = passwordHasher.HashPassword(user, model.Password);
+                user.HashedPassword = passwordHasher.HashPassword(user, request.Password);
+                if (request.IsElasticSynced.HasValue && request.IsElasticSynced.Value)
+                {
+                    var response = await CreateOrUpdateUserElasticSearch(request.FullName, request.Username, request.Password, request.Email);
+                    user.IsElasticSynced = response.Succeed;
+                }
                 _dbContext.Users.InsertOne(user);
                 result.Succeed = true;
                 result.Data = user.Id;
@@ -1218,6 +1227,35 @@ namespace Service.Implementations
                 }
                 result.Data = user.IsConfirmed;
                 result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        public async Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var response = await ElasticSearchHelper.GetBaseUrlRequest(_elasticSettings.KibanaUrl, _elasticSettings.Username, _elasticSettings.Password)
+                 .SetQueryParams(new
+                 {
+                     path = @$"/_security/user/{username}",
+                     method = "POST"
+                 })
+                .PostJsonAsync(new CreateUserElasticRequest
+                {
+                    full_name = fullname,
+                    enabled = true,
+                    password = password,
+                    roles = new List<string> { _elasticSettings.DefaultRole },
+                    email = email,
+                });
+
+                result.Succeed = response.StatusCode == 200;
             }
             catch (Exception e)
             {

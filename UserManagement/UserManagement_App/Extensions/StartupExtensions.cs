@@ -1,5 +1,6 @@
 using Data.DataAccess;
 using Data.ViewModels;
+using Data.ViewModels.ElasticSearchs;
 using Data.ViewModels.FacebookAuths;
 using Data.ViewModels.GoogleAuths;
 using Data.ViewModels.SMSs;
@@ -62,6 +63,10 @@ namespace UserManagement_App.Extensions
             configuration.Bind(nameof(SMSAuthorization), smsAuthorization);
             services.AddSingleton(smsAuthorization);
             services.AddTransient<ISMSService, SMSService>();
+
+            var elasticSearchSettings = new ElasticSettings();
+            configuration.Bind(nameof(ElasticSettings), elasticSearchSettings);
+            services.AddSingleton(elasticSearchSettings);
         }
 
         public static void ConfigSwagger(this IServiceCollection services)
