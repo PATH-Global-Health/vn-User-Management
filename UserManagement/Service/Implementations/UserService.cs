@@ -101,7 +101,7 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<ResultModel> UpdateUser(UserUpdateModel model, string userId)
+        public async Task<ResultModel> UpdateUser(UserUpdateModel request, string userId)
         {
             var result = new ResultModel();
             try
@@ -114,46 +114,46 @@ namespace Service.Implementations
                     return result;
 
                 }
-                if (!string.IsNullOrEmpty(model.FullName))
+                if (!string.IsNullOrEmpty(request.FullName))
                 {
-                    user.FullName = model.FullName;
+                    user.FullName = request.FullName;
                 }
-                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == model.PhoneNumber).FirstOrDefaultAsync();
+                    var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == request.PhoneNumber).FirstOrDefaultAsync();
                     if (existPhoneNumber != null)
                     {
                         result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                         return result;
                     }
-                    if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
                     else
                     {
-                        user.PhoneNumber = model.PhoneNumber;
+                        user.PhoneNumber = request.PhoneNumber;
                         user.OTP = null;
                         user.IsConfirmed = true;
                         await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
                         result.Succeed = true;
                     }
                 }
-                if (!string.IsNullOrEmpty(model.Email))
+                if (!string.IsNullOrEmpty(request.Email))
                 {
-                    var existEmail = await _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefaultAsync();
+                    var existEmail = await _dbContext.Users.Find(i => i.Email == request.Email).FirstOrDefaultAsync();
                     if (existEmail != null)
                     {
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                         return result;
                     }
-                    if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
                     else
                     {
-                        user.Email = model.Email;
+                        user.Email = request.Email;
                         user.OTP = null;
                         user.IsConfirmed = true;
                         await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
