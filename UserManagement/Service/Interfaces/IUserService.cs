@@ -15,9 +15,9 @@ namespace Service.Interfaces
         Task<ResultModel> Create(UserCreateModel model);
         Task<ResultModel> Login(LoginModel model);
         Task<ResultModel> AnonymousLogin();
-        ResultModel ChangePassword(ChangePasswordModel model, string userId);
+        Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId);
         Task<ResultModel> UpdateUser(UserUpdateModel model, string userId);
-        ResultModel ResetDefaultPassword(string username);
+        Task<ResultModel> ResetDefaultPasswordAsync(string username);
         ResultModel UpdateInformation(UserUpdateModel model, string userId);
         UserInformationModel GetUserInformation(string userId);
         ResultModel ImportUsers(List<ImportUserModel> model);

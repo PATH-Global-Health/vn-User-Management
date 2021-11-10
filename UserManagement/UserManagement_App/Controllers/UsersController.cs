@@ -70,11 +70,11 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpPut("ChangePassword")]
-        public IActionResult ChangePassword([FromBody] ChangePasswordModel model)
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordModel model)
         {
             var userId = User.GetId();
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
-            var result = _userService.ChangePassword(model, User.GetId());
+            var result = await _userService.ChangePasswordAsync(model, User.GetId());
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
@@ -95,9 +95,9 @@ namespace UserManagement_App.Controllers
         }
 
         [HttpGet("Tools/ResetDefaultPassword")]
-        public IActionResult ResetDefault(string username)
+        public async Task<IActionResult> ResetDefaultAsync(string username)
         {
-            var result = _userService.ResetDefaultPassword(username);
+            var result = await _userService.ResetDefaultPasswordAsync(username);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }

@@ -58,7 +58,7 @@ namespace Service.Implementations
             _elasticSettings = elasticSettings;
         }
 
-        public ResultModel ChangePassword(ChangePasswordModel model, string userId)
+        public async Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId)
         {
             var result = new ResultModel();
             try
@@ -85,7 +85,10 @@ namespace Service.Implementations
                 user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
                 user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
                 user.DidFirstTimeLogIn = true;
-
+                if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
+                {
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email);
+                }
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
                 result.Data = GetAccessToken(user);
@@ -514,7 +517,7 @@ namespace Service.Implementations
             return claims;
         }
 
-        public ResultModel ResetDefaultPassword(string username)
+        public async Task<ResultModel> ResetDefaultPasswordAsync(string username)
         {
             var result = new ResultModel();
             var defaultPassword = "Zaq@123ABC";
@@ -531,7 +534,10 @@ namespace Service.Implementations
                 user.HashedPassword = passwordHasher.HashPassword(user, defaultPassword);
                 user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
                 user.DidFirstTimeLogIn = false;
-
+                if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
+                {
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, defaultPassword, user.Email);
+                }
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
                 result.Data = defaultPassword;
@@ -840,7 +846,10 @@ namespace Service.Implementations
                 user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
                 user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
                 user.DateUpdated = DateTime.Now;
-
+                if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
+                {
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email);
+                }
                 var update = await _dbContext.Users.ReplaceOneAsync(i => i.NormalizedUsername == username, user);
 
                 result.Succeed = update.ModifiedCount == 1;
