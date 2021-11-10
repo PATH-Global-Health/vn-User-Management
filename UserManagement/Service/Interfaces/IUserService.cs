@@ -22,7 +22,7 @@ namespace Service.Interfaces
         UserInformationModel GetUserInformation(string userId);
         ResultModel ImportUsers(List<ImportUserModel> model);
 
-        Task<ResultModel> SendOTPVerification(string phoneNumber);
+        Task<ResultModel> SendOTPVerification(string phoneNumber, string username);
         Task<ResultModel> VerifyOTPOfPhoneNumber(VerifyOTPOfPhoneNumberRequest request);
         Task<ResultModel> ChangeSecurityQuestionAnswer(ChangeSecurityQuestionAnswerModel model, string username);
         Task<ResultModel> SendUpdateUserOTP(SendOTPRequest request, string username);

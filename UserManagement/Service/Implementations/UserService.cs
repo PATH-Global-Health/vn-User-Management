@@ -1127,7 +1127,7 @@ namespace Service.Implementations
             }
         }
 
-        public async Task<ResultModel> SendOTPVerification(string phoneNumber)
+        public async Task<ResultModel> SendOTPVerification(string phoneNumber, string username)
         {
             var result = new ResultModel();
             try
@@ -1137,7 +1137,7 @@ namespace Service.Implementations
                     result.ErrorMessage = "Please enter phone number for this account and verity by email to get high security";
                     return result;
                 }
-                var users = await _dbContext.Users.FindAsync(x => x.PhoneNumber == phoneNumber);
+                var users = await _dbContext.Users.FindAsync(x => x.Username == username);
                 var user = await users.FirstOrDefaultAsync();
                 if (user == null)
                 {
@@ -1151,9 +1151,30 @@ namespace Service.Implementations
                 }
                 else
                 {
+                    // if user dont have phoneNumber
+                    if (string.IsNullOrEmpty(user.PhoneNumber))
+                    {
+                        // check exist
+                        var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
+                        if (existPhoneNumber != null)
+                        {
+                            result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
+                            return result;
+                        }
+                        var updatePhoneNumberResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
+                            Builders<UserInformation>.Update.Set(x => x.PhoneNumber, phoneNumber)
+                        );
+                        if (updatePhoneNumberResult.ModifiedCount == 0)
+                        {
+                            result.ErrorMessage = "Error add otp for user";
+                            return result;
+                        }
+                    }
+
                     var otp = OTPHepler.GenerateOTP();
-                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.PhoneNumber == phoneNumber,
-                      Builders<UserInformation>.Update.Set(x => x.OTP, otp));
+                    var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
+                      Builders<UserInformation>.Update.Set(x => x.OTP, otp)
+                      );
                     if (updateResult.ModifiedCount != 0)
                     {
                         //var isMailSent = await _mailService.SendEmail(new EmailViewModel()
@@ -1172,7 +1193,7 @@ namespace Service.Implementations
                     }
                     else
                     {
-                        result.ErrorMessage = "Email does not match";
+                        result.ErrorMessage = "Error add otp for user";
                     }
                 }
             }

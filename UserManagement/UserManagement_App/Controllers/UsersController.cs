@@ -301,15 +301,16 @@ namespace UserManagement_App.Controllers
             return BadRequest(login.ErrorMessage);
         }
 
-        [AllowAnonymous]
         [HttpPost("SendOTPVerification")]
         public async Task<IActionResult> SendOTPVerification(string phoneNumber)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid
+                || (!string.IsNullOrEmpty(phoneNumber) && !StringHelper.IsPhoneNumber(phoneNumber))
+                )
             {
                 return BadRequest();
             }
-            var login = await _userService.SendOTPVerification(phoneNumber);
+            var login = await _userService.SendOTPVerification(phoneNumber, User?.FindFirst("Username")?.Value);
             if (login.Succeed)
             {
                 return Ok(login.Data);
