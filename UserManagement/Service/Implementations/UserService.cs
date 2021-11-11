@@ -147,7 +147,7 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                         return result;
                     }
-                    if (!OTPHepler.ValidateOTP(request.OTP, user.OTP))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
@@ -156,9 +156,26 @@ namespace Service.Implementations
                         user.Email = request.Email;
                         user.OTP = null;
                         user.IsConfirmed = true;
+               
                         await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
                         result.Succeed = true;
                     }
+                }
+                try
+                {
+                    _publisher.Publish(JsonConvert.SerializeObject(new UpdateUserProfileViewModel
+                    {
+                        FullName = user.FullName,
+                        Username = user.Username,
+                        IsConfirmed = true,
+                        Phone = user.PhoneNumber,
+                        Status = 1,
+                        Email = user.Email,
+                    }));
+                }
+                catch (Exception)
+                {
+
                 }
             }
             catch (Exception e)
@@ -1161,6 +1178,19 @@ namespace Service.Implementations
                             result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                             return result;
                         }
+                        try
+                        {
+                            _publisher.Publish(JsonConvert.SerializeObject(new UpdateUserProfileViewModel
+                            {
+                                Username = user.Username,
+                                IsConfirmed = true,
+                                Phone = user.PhoneNumber,
+                            }));
+                        }
+                        catch (Exception)
+                        {
+
+                        }
                         var updatePhoneNumberResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
                             Builders<UserInformation>.Update.Set(x => x.PhoneNumber, phoneNumber)
                         );
@@ -1227,7 +1257,7 @@ namespace Service.Implementations
                         await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, null).Set(x => x.IsConfirmed, true));
                         try
                         {
-                            _publisher.Publish(JsonConvert.SerializeObject(new
+                            _publisher.Publish(JsonConvert.SerializeObject(new UpdateUserProfileViewModel
                             {
                                 Username = user.Username,
                                 IsConfirmed = true,

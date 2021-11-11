@@ -29,7 +29,7 @@ namespace Service.RabbitMQ
 
         public void Publish(string message)
         {
-            string queue = "ConfirmedCustomerStatus8";
+            string queue = "ConfirmedCustomerStatus10";
             //string exchange = "VerifyUserExchange";
             try
             {

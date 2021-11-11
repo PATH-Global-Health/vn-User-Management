@@ -109,4 +109,14 @@ namespace Data.ViewModels
         public UserInformationModel UserInfo { get; set; }
         public List<Permission> Permissions { get; set; }
     }
+    public class UpdateUserProfileViewModel
+    {
+        public string FullName { get; set; }
+        public string Username { get; set; }
+        public bool IsConfirmed { get; set; }
+        public int Status { get; set; } = -1;
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public bool IsDelete { get; set; }
+    }
 }
