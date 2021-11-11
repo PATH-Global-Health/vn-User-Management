@@ -156,7 +156,7 @@ namespace Service.Implementations
                         user.Email = request.Email;
                         user.OTP = null;
                         user.IsConfirmed = true;
-               
+
                         await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
                         result.Succeed = true;
                     }
@@ -1182,9 +1182,10 @@ namespace Service.Implementations
                         {
                             _publisher.Publish(JsonConvert.SerializeObject(new UpdateUserProfileViewModel
                             {
+                                FullName = user.FullName,
                                 Username = user.Username,
-                                IsConfirmed = true,
                                 Phone = user.PhoneNumber,
+                                Email = user.Email,
                             }));
                         }
                         catch (Exception)
