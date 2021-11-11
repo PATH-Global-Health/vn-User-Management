@@ -33,7 +33,7 @@ namespace Service.Interfaces
         Task<ResultModel> GetUserInfoAsync(string username);
 
         List<RoleModel> GetRoles(string userId);
-        List<GroupModel> GetGroups(string userId);
+        List<GroupOverviewModel> GetGroups(string userId);
 
         ResultModel DisableUser(string userId);
         ResultModel EnableUser(string userId);

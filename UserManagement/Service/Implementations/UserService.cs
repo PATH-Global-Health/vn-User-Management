@@ -631,16 +631,16 @@ namespace Service.Implementations
             return result;
         }
 
-        public List<GroupModel> GetGroups(string userId)
+        public List<GroupOverviewModel> GetGroups(string userId)
         {
             var user = _dbContext.Users.Find(u => u.Id == userId).FirstOrDefault();
 
-            List<GroupModel> result = new List<GroupModel>();
+            List<GroupOverviewModel> result = new List<GroupOverviewModel>();
 
             foreach (var groupId in user.GroupIds)
             {
                 var group = _dbContext.Groups.Find(u => u.Id == groupId).FirstOrDefault();
-                result.Add(_mapper.Map<Group, GroupModel>(group));
+                result.Add(_mapper.Map<Group, GroupOverviewModel>(group));
             }
             return result;
         }
