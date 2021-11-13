@@ -118,8 +118,10 @@ namespace Service.Implementations
                 {
                     user.FullName = request.FullName;
                 }
+                int confirmStatus = -1;
                 if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
+                    confirmStatus = 1;
                     var existPhoneNumber = await _dbContext.Users.Find(i => i.PhoneNumber == request.PhoneNumber).FirstOrDefaultAsync();
                     if (existPhoneNumber != null)
                     {
@@ -169,7 +171,7 @@ namespace Service.Implementations
                         Username = user.Username,
                         IsConfirmed = true,
                         Phone = user.PhoneNumber,
-                        Status = 1,
+                        Status = confirmStatus,
                         Email = user.Email,
                     }));
                 }
