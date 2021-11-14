@@ -522,7 +522,7 @@ namespace Service.Implementations
                 new Claim("Email", user.Email??""),
                 new Claim("FullName", user.FullName??""),
                 new Claim("Username",user.Username),
-                new Claim("Credential",user.HashedCredential)
+                new Claim("Credential",user.HashedCredential??"")
             };
 
             foreach (var roleId in user.RoleIds)
@@ -1135,7 +1135,7 @@ namespace Service.Implementations
                     }
                 }
                 result.Succeed = true;
-                result.Data = GetAccessToken(user, new PermissionQuery() { Type = "UiPermission" });
+                result.Data = GetAccessToken(user);
                 return result;
             }
             catch (Exception e)
