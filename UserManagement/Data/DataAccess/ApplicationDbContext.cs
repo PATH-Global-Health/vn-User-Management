@@ -1,5 +1,6 @@
 ﻿using Data.MongoCollections;
 using MongoDB.Driver;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Data.DataAccess
@@ -45,14 +46,72 @@ namespace Data.DataAccess
             if (!collectionNames.Any(name => name == "groups"))
             {
                 _db.CreateCollection("groups");
+
+                this.Groups.InsertMany(new List<Group> {
+                    new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                        NormalizedName = "ADMIN",
+                        Name = "ADMIN",
+                        UserIds = new List<string>
+                            {
+                                "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                            },
+                    },
+                    new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0c",
+                        NormalizedName = "CDC",
+                        Name = "CDC",
+                    },
+                    new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0d",
+                        NormalizedName = "CBO",
+                        Name = "CBO",
+                    },
+                    new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0e",
+                        NormalizedName = "EMPLOYEE",
+                        Name = "EMPLOYEE",
+                    },
+                    new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0f",
+                        NormalizedName = "CUSTOMER",
+                        Name = "CUSTOMER",
+                    },
+                });
             }
             if (!collectionNames.Any(name => name == "roles"))
             {
                 _db.CreateCollection("roles");
+
+                this.Roles.InsertMany(new List<Role> {
+                    new Role{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                        NormalizedName = "ADMIN",
+                        Name = "ADMIN",
+                        UserIds = new List<string>
+                            {
+                                "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                            },
+                    },
+                });
             }
             if (!collectionNames.Any(name => name == "users"))
             {
                 _db.CreateCollection("users");
+
+                this.Users.InsertMany(new List<UserInformation> {
+                new UserInformation{
+                    Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                    Username = "super_admin",
+                    NormalizedUsername = "SUPER_ADMIN",
+                    IsConfirmed = true,
+                    RoleIds = new List<string> {
+                        "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                    },
+                    HashedPassword = "AQAAAAEAACcQAAAAEGAZv1YKvBRakmLJwE6Hio3FCgJDc7iOZumx1gwQDu34qYlkKfkvIGLcoMYoI2UwHg==",
+                    HashedCredential = "AQAAAAEAACcQAAAAEMhn6ucCttYdwvdfue8PMZXJ/Plde3OD3mSH2i94SzgS1wtxxT+wWxpgF9F1XhMVHQ==",
+                },
+                });
             }
 
             if (!collectionNames.Any(name => name == "resourcePermissions"))

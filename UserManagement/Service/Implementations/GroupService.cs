@@ -125,6 +125,13 @@ namespace Service.Implementations
             return result;
         }
 
+        public ResultModel AddUsersByGroupName(string groupName, List<string> userIds)
+        {
+            var group = _dbContext.Groups.Find(x => x.Name == groupName).FirstOrDefault();
+            if (group == null)
+                return new ResultModel() { Succeed = false };
+            return AddUsers(group.Id, userIds);
+        }
         public ResultModel AddUsers(string groupId, List<string> userIds)
         {
             ResultModel result = new ResultModel();

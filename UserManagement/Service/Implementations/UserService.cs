@@ -41,10 +41,12 @@ namespace Service.Implementations
         private readonly ISMSService _smsService;
         private readonly IVerifyUserPublisher _publisher;
         private readonly ElasticSettings _elasticSettings;
+        private readonly IGroupService _groupService;
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
-                ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings)
+                ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings,
+                IGroupService groupService)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -56,6 +58,7 @@ namespace Service.Implementations
             _smsService = smsService;
             _publisher = publisher;
             _elasticSettings = elasticSettings;
+            _groupService = groupService;
         }
 
         public async Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId)
@@ -254,6 +257,7 @@ namespace Service.Implementations
                     user.IsElasticSynced = response.Succeed;
                 }
                 _dbContext.Users.InsertOne(user);
+                _groupService.AddUsersByGroupName(request.GroupName, new List<string> { user.Id });
                 result.Succeed = true;
                 result.Data = user.Id;
             }
@@ -445,6 +449,7 @@ namespace Service.Implementations
             };
             user.HashedPassword = passwordHasher.HashPassword(user, guid);
             await _dbContext.Users.InsertOneAsync(user);
+            _groupService.AddUsersByGroupName(GroupConstants.CUSTOMER, new List<string> { user.Id });
             return guid;
         }
         private async Task<bool> UserIsOnOldLoginSystem(string username, string password)

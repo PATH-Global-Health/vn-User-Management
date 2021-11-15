@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using Data.Enums;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,6 +17,7 @@ namespace Data.ViewModels
         public string PhoneNumber { get; set; } = "";
         public string FullName { get; set; } = "";
         public bool? IsElasticSynced { get; set; }
+        public string GroupName { get; set; } = "CUSTOMER";
     }
 
     public class ChangePasswordModel

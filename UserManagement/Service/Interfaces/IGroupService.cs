@@ -11,6 +11,7 @@ namespace Service.Interfaces
         ResultModel Update(string groupId, GroupUpdateModel model);
         ResultModel Delete(string groupId);
 
+        ResultModel AddUsersByGroupName(string groupName, List<string> userIds);
         ResultModel AddUsers(string groupId, List<string> userIds);
         ResultModel RemoveUser(string groupId, string userId);
 

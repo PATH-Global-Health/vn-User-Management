@@ -41,9 +41,10 @@ namespace UserManagement_App
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                mongoDbContext.CreateCollectionsIfNotExists();
-                mongoDbContext.SeedData();
             }
+            mongoDbContext.CreateCollectionsIfNotExists();
+            mongoDbContext.SeedData();
+
             app.UseCors("AllowAll");
             app.UseHttpsRedirection();
 
