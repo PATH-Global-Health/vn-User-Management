@@ -13,6 +13,7 @@ namespace Service.MappingProfiles
                 ;
 
             CreateMap<UiPermissionCreateModel, UiPermission>()
+                .ForMember(dm => dm.Type, map => map.MapFrom(vm => vm.PermissionType))
                 ;
 
             CreateMap<ResourcePermission, ResourcePermissionModel>()
