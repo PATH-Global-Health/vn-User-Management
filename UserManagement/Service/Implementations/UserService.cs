@@ -335,38 +335,8 @@ namespace Service.Implementations
                 }
                 if (user == null)
                 {
-                    // #region Check on old system **Disabled**
-                    // if (await UserIsOnOldLoginSystem(username, password))
-                    // {
-                    //     var userCreateModel = new UserCreateModel
-                    //     {
-                    //         Username = username,
-                    //         Password = password,
-                    //         FullName = username
-                    //     };
-                    //     var createUserResult = Create(userCreateModel);
-                    //     if (createUserResult.Succeed)
-                    //     {
-                    //         var newUserId = createUserResult.Data as string;
-                    //         user = _dbContext.Users.Find(i => i.Id == newUserId).FirstOrDefault();
-                    //     }
-                    //     else
-                    //     {
-                    //         result = createUserResult;
-                    //         return result;
-                    //     }
-                    // }
-                    // else
-                    // {
-                    //     result.ErrorMessage = "Username or password is incorrect";
-                    //     return result;
-                    // }
-                    // #endregion
-
-                    #region Don't check on old system
                     result.ErrorMessage = ErrorConstants.NOT_EXIST_ACCOUNT;
                     return result;
-                    #endregion
                 }
                 //if (!user.IsConfirmed)
                 //{
@@ -520,6 +490,32 @@ namespace Service.Implementations
             return results;
         }
 
+        private List<Role> GetAllUserRoles(UserInformation user)
+        {
+            var userGroupFilter = Builders<Group>.Filter.In(x => x.Id, user.GroupIds);
+            var groups = _dbContext.Groups.Find(userGroupFilter).ToList();
+            var roleIds = new List<string>();
+            groups.ForEach(g =>
+            {
+                g.RoleIds.ForEach(roleId =>
+                {
+                    if (!roleIds.Any(s => s == roleId))
+                    {
+                        roleIds.Add(roleId);
+                    }
+                });
+            });
+            user.RoleIds.ForEach(roleId =>
+            {
+                if (!roleIds.Any(s => s == roleId))
+                {
+                    roleIds.Add(roleId);
+                }
+            });
+            var userRoleFilter = Builders<Role>.Filter.In(x => x.Id, roleIds);
+            return _dbContext.Roles.Find(userRoleFilter).ToList();
+        }
+
         private List<Claim> GetClaims(UserInformation user)
         {
             var claims = new List<Claim> {
@@ -529,12 +525,13 @@ namespace Service.Implementations
                 new Claim("Username",user.Username),
                 new Claim("Credential",user.HashedCredential??"")
             };
-
-            foreach (var roleId in user.RoleIds)
+            #region process roles of user
+            var roles = GetAllUserRoles(user);
+            roles.ForEach(s =>
             {
-                var role = _dbContext.Roles.Find(r => r.Id == roleId).FirstOrDefault();
-                claims.Add(new Claim("Role", role.Name));
-            }
+                claims.Add(new Claim("Role", s.Name));
+            });
+            #endregion
 
             if (!string.IsNullOrEmpty(user.PhoneNumber)) claims.Add(new Claim("PhoneNumber", user.PhoneNumber));
 
