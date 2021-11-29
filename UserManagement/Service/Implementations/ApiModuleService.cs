@@ -99,7 +99,7 @@ namespace Service.Implementations
             try
             {
                 #region Create module
-                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(apiHost, $"{replacementHost}/api/v1/{moduleName}", doPathReplacement);
+                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(apiHost, $"{replacementHost}/api", doPathReplacement);
                 var swaggerDocument = JsonConvert.DeserializeObject<SwaggerDocument>((string)modifySwaggerDocumentResult.Data);
                 ApiModule newModule = null;
                 if (swaggerDocument != null)
@@ -130,26 +130,23 @@ namespace Service.Implementations
                 #endregion
 
                 #region Create Resource Permissions
-                var apiUrl = $"{replacementHost}/api/v1/{moduleName}";
-                var newPermissions = newModule.Paths.AsParallel().Select(path =>
+                newModule.Paths.AsParallel().ForEach(path =>
                 {
                     var permission = new ResourcePermission
                     {
                         Method = path.Method,
                         NormalizedMethod = path.NormalizedMethod,
-                        Url = $"/api/v1/{moduleName}/{path.Path}",
-                        PermissionType = Data.Enums.PermissionType.Allow
+                        Url = $"/api/{path.Path}",
+                        PermissionType = Data.Enums.PermissionType.Allow,
+                        IsAuthorizedAPI = true
                     };
                     permission.Url = permission.Url.Replace("//", "/");
                     permission.Url = $"{replacementHost}{permission.Url}";
                     permission.NormalizedUrl = permission.Url.Trim().ToUpper();
-
+                    _dbContext.ResourcePermissions.InsertOne(session, permission);
                     path.PermissionIds.Add(permission.Id);
-
-                    return permission;
                 });
 
-                await _dbContext.ResourcePermissions.InsertManyAsync(session, newPermissions);
                 await _dbContext.ApiModules.ReplaceOneAsync(session, i => i.Id == newModule.Id, newModule);
                 #endregion
 
@@ -385,7 +382,7 @@ namespace Service.Implementations
             var session = _dbContext.StartSession(); session.StartTransaction();
             try
             {
-                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(apiHost, $"{replacementHost}/api/v1/{moduleName}/{upstreamName}", doPathReplacement);
+                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(apiHost, $"{replacementHost}/api/{upstreamName}", doPathReplacement);
                 var swaggerDocument = JsonConvert.DeserializeObject<SwaggerDocument>((string)modifySwaggerDocumentResult.Data);
                 if (swaggerDocument != null)
                 {
@@ -430,14 +427,13 @@ namespace Service.Implementations
                         #endregion
 
                         #region Add new resource permissions
-                        var apiUrl = $"{replacementHost}/api/v1/{moduleName}/{upstreamName}";
                         var newPermissions = newPaths.Select(path =>
                         {
                             var permission = new ResourcePermission
                             {
                                 Method = path.Method,
                                 NormalizedMethod = path.NormalizedMethod,
-                                Url = $"{replacementHost}/api/v1/{moduleName}/{upstreamName}/{path.Path}",
+                                Url = $"{replacementHost}/api/{moduleName}/{upstreamName}/{path.Path}",
                                 PermissionType = Data.Enums.PermissionType.Allow
                             };
                             permission.Url = permission.Url.Replace("//", "/");
