@@ -950,6 +950,30 @@ namespace Service.Implementations
         {
             var result = new ResultModel();
 
+            #region Unauthorized API
+            var resourcePermissions = _dbContext.ResourcePermissions.Find(p => !(p.IsAuthorizedAPI == true)).ToList();
+            var _lock = new object();
+            Parallel.ForEach(Partitioner.Create(resourcePermissions), (permission, state) =>
+            {
+                var validUri = SegmentsEqual(GetSegments(model.ApiPath), GetSegments(permission.NormalizedUrl));
+                var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
+                var allowedPermission = permission.PermissionType == PermissionType.Allow;
+
+                if (validUri && validMethod && allowedPermission)
+                {
+                    lock (_lock)
+                    {
+                        result.Succeed = true;
+                        state.Stop();
+                    }
+                }
+            });
+            if (result.Succeed)
+            {
+                return result;
+            } //return if API is not authorized API
+            #endregion
+            #region Authorized API
             var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
             if (user != null)
             {
@@ -958,13 +982,49 @@ namespace Service.Implementations
                     result.Succeed = true;
                     return result;
                 }
+                var groupFilters = Builders<Group>.Filter.In(i => i.Id, user.GroupIds);
+                var groupsOfUser = _dbContext.Groups.Find(groupFilters).ToList();
 
-                var _lock = new object();
-                Parallel.ForEach(Partitioner.Create(user.ResourcePermissionIds), (permissionId, state) =>
+                var roleFilters = Builders<Role>.Filter.In(i => i.Id, user.RoleIds);
+                var rolesOfUser = _dbContext.Roles.Find(roleFilters).ToList();
+
+                var permissionIds = new List<string>();
+                groupsOfUser.ForEach(group =>
                 {
-                    var permission = _dbContext.ResourcePermissions.Find(i => i.Id == permissionId).FirstOrDefault();
-                    if (permission == null) return;
+                    group.ResourcePermissionIds.ForEach(s =>
+                    {
+                        if (!permissionIds.Any(p => p == s))
+                        {
+                            permissionIds.Add(s);
+                        }
+                    });
+                });
 
+                rolesOfUser.ForEach(role =>
+                {
+                    role.ResourcePermissionIds.ForEach(s =>
+                    {
+                        if (!permissionIds.Any(p => p == s))
+                        {
+                            permissionIds.Add(s);
+                        }
+                    });
+                });
+
+                user.ResourcePermissionIds.ForEach(s =>
+                {
+                    if (!permissionIds.Any(p => p == s))
+                    {
+                        permissionIds.Add(s);
+                    }
+                });
+
+                var permissionFilters = Builders<ResourcePermission>.Filter.In(p => p.Id, permissionIds);
+                var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
+                
+                _lock = new object();
+                Parallel.ForEach(Partitioner.Create(permissions), (permission, state) =>
+                {
                     var validUri = SegmentsEqual(GetSegments(model.ApiPath), GetSegments(permission.NormalizedUrl));
                     var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
                     var allowedPermission = permission.PermissionType == PermissionType.Allow;
@@ -978,11 +1038,11 @@ namespace Service.Implementations
                         }
                     }
                 });
-
                 return result;
             }
 
             return result;
+            #endregion
         }
 
         private bool IsSpecialUser(UserInformation user)
