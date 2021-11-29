@@ -11,13 +11,14 @@ namespace Data.MongoCollections
         public string Name { get; set; }
         public string Description { get; set; }
 
+        //Type: Method + Url (Key)
         public string Url { get; set; }
         public string NormalizedUrl { get; set; }
         public string Method { get; set; }
         public string NormalizedMethod { get; set; }
+        public bool? IsAuthorizedAPI { get; set; }
 
         public PermissionType PermissionType { get; set; } = PermissionType.Deny;
-
 
         [BsonDateTimeOptions]
         public DateTime DateCreated { get; set; } = DateTime.Now;
