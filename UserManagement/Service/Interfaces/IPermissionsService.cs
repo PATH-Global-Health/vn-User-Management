@@ -13,6 +13,7 @@ namespace Service.Interfaces
 
         ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model);
         ResultModel AddPermission(string holderId, HolderType holder, UiPermissionCreateModel model);
+        ResultModel ChangeAPIAuthorizationResourcePermission(string id, bool isAuthorized);
 
         List<ResourcePermissionModel> GetResourcePermissions(string holderId, HolderType holder);
         List<UiPermissionModel> GetUiPermissions(string holderId, HolderType holder);

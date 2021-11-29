@@ -60,6 +60,24 @@ namespace Service.Implementations
             }
             return result;
         }
+        public ResultModel ChangeAPIAuthorizationResourcePermission(string id, bool isAuthorized)
+        {
+            ResultModel result = new ResultModel();
+            if (string.IsNullOrEmpty(id))
+            {
+                result.ErrorMessage = "Id is not valid";
+                return result;
+            }
+            var resourcePermission = _dbContext.ResourcePermissions.FindOneAndUpdate(x => x.Id == id,
+                Builders<ResourcePermission>.Update.Set(x => x.IsAuthorizedAPI, isAuthorized));
+            if (resourcePermission == null)
+            {
+                result.ErrorMessage = "Resource Permission is not existed";
+                return result;
+            }
+            result.Succeed = true;
+            return result;
+        }
 
         private ResultModel AddUserPermission(string userId, ResourcePermissionCreateModel model)
         {
@@ -1021,7 +1039,7 @@ namespace Service.Implementations
 
                 var permissionFilters = Builders<ResourcePermission>.Filter.In(p => p.Id, permissionIds);
                 var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
-                
+
                 _lock = new object();
                 Parallel.ForEach(Partitioner.Create(permissions), (permission, state) =>
                 {
