@@ -77,6 +77,15 @@ namespace Data.DataAccess
                         NormalizedName = "CUSTOMER",
                         Name = "CUSTOMER",
                     },
+                                         new Group{
+                        Id = "90e7e595-6cc7-4fe9-8921-03ec2971be0b",
+                        NormalizedName = "FACILITY",
+                        Name = "FACILITY",
+                        UserIds = new List<string>
+                            {
+                                "90e7e595-6cc7-4fe9-8921-03ec2971be0g",
+                            },
+                    },
                 });
             }
             if (!collectionNames.Any(name => name == "roles"))
