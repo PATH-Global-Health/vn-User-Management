@@ -15,6 +15,7 @@ using NSwag.Generation.Processors.Security;
 using Service.Implementations;
 using Service.Interfaces;
 using Service.RabbitMQ;
+using Service.RabbitMQ.RPC.Servers;
 using System;
 using System.IO;
 using System.Linq;
@@ -45,8 +46,8 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IApiModuleService, ApiModuleService>();
 
             //services.AddSingleton<IHostedService, Consumer>();
-            //services.AddHostedService<PermissionRpcServer>();
-            //services.AddHostedService<TokenValidationRpcServer>();
+            services.AddHostedService<PermissionRpcServer>();
+            services.AddHostedService<TokenValidationRpcServer>();
             services.AddScoped<IVerifyUserPublisher, VerifyUserPublisher>();
 
             var facebookAuthSettings = new FacebookAuthSettings();
