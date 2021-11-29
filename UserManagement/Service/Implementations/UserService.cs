@@ -205,37 +205,40 @@ namespace Service.Implementations
                     result.ErrorMessage = ErrorConstants.NULL_USERNAME;
                     return result;
                 }
-                if (!IsEmailAvailable(request.Email))
+                if (!request.OnlyUsername)
                 {
-                    //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
-                    //if (checkVerifiedUser != null && !checkVerifiedUser.IsConfirmed)
-                    //{
-                    //    if (CheckValidUnverifiedAccount(checkVerifiedUser))
-                    //    {
-                    //        await SendOTPVerification(checkVerifiedUser.Email);
-                    //        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
-                    //        return result;
-                    //    }
-                    //    else
-                    //    {
-                    //        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == checkVerifiedUser.Id);
-                    //    }
-                    //}
-                    //else
+                    if (!IsEmailAvailable(request.Email))
                     {
-                        result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
+                        //var checkVerifiedUser = _dbContext.Users.Find(i => i.Email == model.Email).FirstOrDefault();
+                        //if (checkVerifiedUser != null && !checkVerifiedUser.IsConfirmed)
+                        //{
+                        //    if (CheckValidUnverifiedAccount(checkVerifiedUser))
+                        //    {
+                        //        await SendOTPVerification(checkVerifiedUser.Email);
+                        //        result.ErrorMessage = ErrorConstants.UNVERIFIED_USER;
+                        //        return result;
+                        //    }
+                        //    else
+                        //    {
+                        //        await _dbContext.Users.FindOneAndDeleteAsync(i => i.Id == checkVerifiedUser.Id);
+                        //    }
+                        //}
+                        //else
+                        {
+                            result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
+                            return result;
+                        }
+                    }
+                    if (!IsUsernameAvailable(request.Username))
+                    {
+                        result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
                         return result;
                     }
-                }
-                if (!IsUsernameAvailable(request.Username))
-                {
-                    result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
-                    return result;
-                }
-                if (!IsPhoneNumberAvailable(request.PhoneNumber))
-                {
-                    result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
-                    return result;
+                    if (!IsPhoneNumberAvailable(request.PhoneNumber))
+                    {
+                        result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
+                        return result;
+                    }
                 }
                 #endregion
 

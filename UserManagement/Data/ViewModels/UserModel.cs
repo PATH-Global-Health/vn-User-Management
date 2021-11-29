@@ -18,6 +18,7 @@ namespace Data.ViewModels
         public string FullName { get; set; } = "";
         public bool? IsElasticSynced { get; set; }
         public string GroupName { get; set; } = "CUSTOMER";
+        public bool OnlyUsername { get; set; } = false;
     }
 
     public class ChangePasswordModel
