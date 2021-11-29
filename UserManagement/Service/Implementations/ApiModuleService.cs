@@ -86,7 +86,7 @@ namespace Service.Implementations
                 {
                     result.ErrorMessage = "Module name cannot have white spaces"; return result;
                 }
-                var existedModule = _dbContext.ApiModules.Find(i => i.NormalizedModuleName == moduleName.ToUpper() && i.NormalizedHostName == replacementHost.ToUpper()).FirstOrDefault();
+                var existedModule = _dbContext.ApiModules.Find(i => !i.IsDeleted && i.NormalizedModuleName == moduleName.ToUpper() && i.NormalizedHostName == replacementHost.ToUpper()).FirstOrDefault();
                 if (existedModule != null)
                 {
                     result.ErrorMessage = "Module name is existed"; return result;
@@ -548,6 +548,36 @@ namespace Service.Implementations
             if (value.Head != null) return "Head";
             if (value.Patch != null) return "Patch";
             return "";
+        }
+        public async Task<ResultModel> Delete(string id)
+        {
+            var result = new ResultModel();
+            var session = _dbContext.StartSession(); session.StartTransaction();
+            try
+            {
+                var updateBuilder = Builders<ApiModule>.Update.Set(x => x.IsDeleted, true);
+                var modulesFluent = await _dbContext.ApiModules.FindOneAndUpdateAsync(session, x => !x.IsDeleted && x.Id == id, updateBuilder);
+
+                var deletedResourcePermissionIds = new List<string>();
+                modulesFluent.Paths.AsParallel().ForEach(path =>
+                {
+                    deletedResourcePermissionIds.AddRange(path.PermissionIds);
+                });
+
+                var deleteResourcePermissionsBuilder = Builders<ResourcePermission>.Filter.In(x => x.Id, deletedResourcePermissionIds);
+                await _dbContext.ResourcePermissions.DeleteManyAsync(session, deleteResourcePermissionsBuilder);
+                await session.CommitTransactionAsync();
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.Message;
+                await session.AbortTransactionAsync();
+            }
+            finally
+            {
+                session.Dispose();
+            }
+            return result;
         }
     }
 }

@@ -10,5 +10,6 @@ namespace Service.Interfaces
         Task<ResultModel> Create(string apiHost, string replacementHost, string moduleName, bool doPathReplacement);
         Task<ResultModel> Update(string moduleId, string apiHost, string replacementHost, string moduleName, string upstreamName, bool doPathReplacement);
         Task<string> GetSwaggerDocument(string moduleId);
+        Task<ResultModel> Delete(string id);
     }
 }

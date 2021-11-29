@@ -47,5 +47,13 @@ namespace UserManagement_App.Controllers
             if (result != null) return Ok(result);
             return BadRequest("Record not existed");
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteApi([FromRoute] Guid id)
+        {
+            var result = await _apiModuleService.Delete(id.ToString());
+            if (result != null) return Ok();
+            return BadRequest("Record not existed");
+        }
     }
 }
