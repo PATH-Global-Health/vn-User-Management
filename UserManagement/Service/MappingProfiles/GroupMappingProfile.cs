@@ -8,10 +8,9 @@ namespace Service.MappingProfiles
     {
         public GroupMappingProfile()
         {
-            CreateMap<Group, GroupModel>();
-            CreateMap<Group, GroupOverviewModel>();
-            CreateMap<GroupUpdateModel, Group>();
-
+            CreateMap<Group, GroupModel>().ReverseMap();
+            CreateMap<Group, GroupOverviewModel>().ReverseMap();
+            CreateMap<GroupUpdateModel, Group>().ReverseMap();
         }
     }
 }
