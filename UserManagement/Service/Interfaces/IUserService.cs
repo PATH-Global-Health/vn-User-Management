@@ -44,6 +44,6 @@ namespace Service.Interfaces
         Task<ResultModel> LoginWithGoogleAsync(string idToken);
         Task<ResultModel> IsConfirmdUser(string username);
         void TestRabbitMQ(string username);
-        Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email);
+        Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email, bool isUpdate = false);
     }
 }

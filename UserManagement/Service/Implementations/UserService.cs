@@ -90,7 +90,7 @@ namespace Service.Implementations
                 user.DidFirstTimeLogIn = true;
                 if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
                 {
-                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email);
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email, true);
                 }
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
@@ -560,7 +560,7 @@ namespace Service.Implementations
                 user.DidFirstTimeLogIn = false;
                 if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
                 {
-                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, defaultPassword, user.Email);
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, defaultPassword, user.Email, true);
                 }
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
@@ -879,7 +879,7 @@ namespace Service.Implementations
                 user.DateUpdated = DateTime.Now;
                 if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
                 {
-                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email);
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email, true);
                 }
                 var update = await _dbContext.Users.ReplaceOneAsync(i => i.NormalizedUsername == username, user);
 
@@ -1310,25 +1310,29 @@ namespace Service.Implementations
             return result;
         }
 
-        public async Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email)
+        public async Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email, bool isUpdate = false)
         {
             var result = new ResultModel();
             try
             {
+                var user = new CreateUserElasticRequest
+                {
+                    full_name = fullname,
+                    enabled = true,
+                    password = password,
+                    email = email,
+                };
+                if (!isUpdate)
+                {
+                    user.roles = new List<string> { _elasticSettings.DefaultRole };
+                }
                 var response = await ElasticSearchHelper.GetBaseUrlRequest(_elasticSettings.KibanaUrl, _elasticSettings.Username, _elasticSettings.Password)
                  .SetQueryParams(new
                  {
                      path = @$"/_security/user/{username}",
                      method = "POST"
                  })
-                .PostJsonAsync(new CreateUserElasticRequest
-                {
-                    full_name = fullname,
-                    enabled = true,
-                    password = password,
-                    roles = new List<string> { _elasticSettings.DefaultRole },
-                    email = email,
-                });
+                .PostJsonAsync(user);
 
                 result.Succeed = response.StatusCode == 200;
             }
