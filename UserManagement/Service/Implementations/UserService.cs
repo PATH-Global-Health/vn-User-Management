@@ -18,6 +18,7 @@ using Service.Interfaces;
 using Service.RabbitMQ;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
@@ -91,6 +92,11 @@ namespace Service.Implementations
                 if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
                 {
                     var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email, true);
+                    if (!response.Succeed)
+                    {
+                        result.ErrorMessage = "Update elastic password failed";
+                        return result;
+                    }
                 }
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
@@ -1326,15 +1332,13 @@ namespace Service.Implementations
                 {
                     user.roles = new List<string> { _elasticSettings.DefaultRole };
                 }
-                var response = await ElasticSearchHelper.GetBaseUrlRequest(_elasticSettings.KibanaUrl, _elasticSettings.Username, _elasticSettings.Password)
-                 .SetQueryParams(new
-                 {
-                     path = @$"/_security/user/{username}",
-                     method = "POST"
-                 })
-                .PostJsonAsync(user);
-
-                result.Succeed = response.StatusCode == 200;
+                else
+                {
+                    var elasticUser = await ElasticSearchHelper.GetUserRequestAsync(_elasticSettings.KibanaUrl, _elasticSettings.Username, _elasticSettings.Password, username);
+                    user.roles = elasticUser.Roles;
+                }
+                var response = await ElasticSearchHelper.IndexUserRequestAsync(_elasticSettings.KibanaUrl, _elasticSettings.Username, _elasticSettings.Password, username, user);
+                result.Succeed = response;
             }
             catch (Exception e)
             {
