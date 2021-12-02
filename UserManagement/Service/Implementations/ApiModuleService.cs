@@ -449,12 +449,8 @@ namespace Service.Implementations
                     //Remove api paths and remove permissions
                     if (deletedPaths.Any())
                     {
-                        foreach (var apiPath in deletedPaths)
+                        foreach (var apiPath in deletedPaths.ToList())
                         {
-                            #region Remove in module
-                            module.Paths.Remove(apiPath);
-                            #endregion
-
                             #region Remove permission
                             foreach (var permissionId in apiPath.PermissionIds)
                             {
@@ -493,6 +489,9 @@ namespace Service.Implementations
                                 });
                                 #endregion
 
+                                #region Remove in module
+                                module.Paths.Remove(apiPath);
+                                #endregion
                             }
                             #endregion
                         }
