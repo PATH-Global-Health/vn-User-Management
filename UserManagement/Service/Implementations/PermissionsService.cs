@@ -330,7 +330,8 @@ namespace Service.Implementations
                     return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    user.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicates = ids.Select(id => id.ToString()).Except(user.ResourcePermissionIds);
+                    user.ResourcePermissionIds.AddRange(unduplicates);
                     _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
                 }
                 else
@@ -366,7 +367,8 @@ namespace Service.Implementations
                     return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    role.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicates = ids.Select(id => id.ToString()).Except(role.ResourcePermissionIds);
+                    role.ResourcePermissionIds.AddRange(unduplicates);
                     _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
                 }
                 else
@@ -402,7 +404,8 @@ namespace Service.Implementations
                     return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    group.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicates = ids.Select(id => id.ToString()).Except(group.ResourcePermissionIds).ToList();
+                    group.ResourcePermissionIds.AddRange(unduplicates);
                     _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
                 }
                 else
@@ -699,7 +702,8 @@ namespace Service.Implementations
                     return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    user.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicateUIPermissions = ids.Select(id => id.ToString()).Except(user.UiPermissionIds);
+                    user.UiPermissionIds.AddRange(unduplicateUIPermissions);
                     _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
                 }
                 else
@@ -735,7 +739,8 @@ namespace Service.Implementations
                     return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    role.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicates = ids.Select(id => id.ToString()).Except(role.UiPermissionIds);
+                    role.UiPermissionIds.AddRange(unduplicates);
                     _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
                 }
                 else
@@ -771,7 +776,8 @@ namespace Service.Implementations
                     return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
                 }))
                 {
-                    group.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    var unduplicates = ids.Select(id => id.ToString()).Except(group.UiPermissionIds);
+                    group.UiPermissionIds.AddRange(unduplicates);
                     _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
                 }
                 else
