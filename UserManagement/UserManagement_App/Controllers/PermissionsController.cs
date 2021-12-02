@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Data.Enums;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -90,6 +91,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
+        [HttpPost("Resource/BatchIds")]
+        public IActionResult AddResourcesByIds([FromBody] AddBatchIdsPermissionModel model)
+        {
+            ResultModel result = _permissionsService.AddResourcePermissions(model.HolderId, model.HolderType, model.Ids);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
         #endregion
 
         #region Ui 
@@ -129,6 +137,13 @@ namespace UserManagement_App.Controllers
         public IActionResult CreateUiPermissions([FromBody] List<UiPermissionCreateModel> models)
         {
             ResultModel result = _permissionsService.CreatePermissions(models);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
+        [HttpPost("Ui/BatchIds")]
+        public IActionResult AddUIByIds([FromBody] AddBatchIdsPermissionModel model)
+        {
+            ResultModel result = _permissionsService.AddUIPermissions(model.HolderId, model.HolderType, model.Ids);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }

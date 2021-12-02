@@ -42,7 +42,17 @@ namespace Service.Implementations
             }
             return result;
         }
-
+        public ResultModel AddResourcePermissions(string holderId, HolderType holderType, List<Guid> permissionIds)
+        {
+            ResultModel result = new ResultModel();
+            switch (holderType)
+            {
+                case HolderType.User: result = AddUserResourcePermissions(holderId, permissionIds); break;
+                case HolderType.Role: result = AddRoleResourcePermissions(holderId, permissionIds); break;
+                case HolderType.Group: result = AddGroupResourcePermissions(holderId, permissionIds); break;
+            }
+            return result;
+        }
         public ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model)
         {
             ResultModel result = new ResultModel();
@@ -302,6 +312,114 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        private ResultModel AddUserResourcePermissions(string userId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    user.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddRoleResourcePermissions(string roleId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                if (role == null)
+                {
+                    result.ErrorMessage = "Role is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    role.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddGroupResourcePermissions(string groupId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                if (group == null)
+                {
+                    result.ErrorMessage = "Group is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.ResourcePermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    group.ResourcePermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
         #endregion
 
         #region Ui Permission
@@ -313,6 +431,17 @@ namespace Service.Implementations
                 case HolderType.User: result = AddUserPermissions(holderId, permissions); break;
                 case HolderType.Role: result = AddRolePermissions(holderId, permissions); break;
                 case HolderType.Group: result = AddGroupPermissions(holderId, permissions); break;
+            }
+            return result;
+        }
+        public ResultModel AddUIPermissions(string holderId, HolderType holderType, List<Guid> uiIds)
+        {
+            ResultModel result = new ResultModel();
+            switch (holderType)
+            {
+                case HolderType.User: result = AddUserUIPermissions(holderId, uiIds); break;
+                case HolderType.Role: result = AddRoleUIPermissions(holderId, uiIds); break;
+                case HolderType.Group: result = AddGroupUIPermissions(holderId, uiIds); break;
             }
             return result;
         }
@@ -542,6 +671,113 @@ namespace Service.Implementations
 
                     result.Succeed = false;
                     result.ErrorMessage = "Some of the permissions cannot be created";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+        private ResultModel AddUserUIPermissions(string userId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "User is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    user.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Users.FindOneAndReplace(i => i.Id == user.Id, user);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddRoleUIPermissions(string roleId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                if (role == null)
+                {
+                    result.ErrorMessage = "Role is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    role.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Roles.FindOneAndReplace(i => i.Id == role.Id, role);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
+                    return result;
+                }
+
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+        private ResultModel AddGroupUIPermissions(string groupId, List<Guid> ids)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                if (group == null)
+                {
+                    result.ErrorMessage = "Group is not existed";
+                    return result;
+                }
+
+                if (ids.All(id =>
+                {
+                    return _dbContext.UiPermissions.Find(x => x.Id == id.ToString()).Any();
+                }))
+                {
+                    group.UiPermissionIds.AddRange(ids.Select(id => id.ToString()));
+                    _dbContext.Groups.FindOneAndReplace(i => i.Id == group.Id, group);
+                }
+                else
+                {
+                    result.Succeed = false;
+                    result.ErrorMessage = "One of them is not existed";
                     return result;
                 }
 

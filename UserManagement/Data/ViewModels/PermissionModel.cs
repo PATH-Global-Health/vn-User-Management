@@ -64,6 +64,13 @@ namespace Data.ViewModels
         public string HolderId { get; set; }
     }
 
+    public class AddBatchIdsPermissionModel
+    {
+        public List<Guid> Ids { get; set; }
+        public HolderType HolderType { get; set; }
+        public string HolderId { get; set; }
+    }
+
     public class AddUiPermissionModel
     {
         public UiPermissionCreateModel Permission { get; set; }

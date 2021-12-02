@@ -1,5 +1,6 @@
 ﻿using Data.Enums;
 using Data.ViewModels;
+using System;
 using System.Collections.Generic;
 
 namespace Service.Interfaces
@@ -13,6 +14,7 @@ namespace Service.Interfaces
 
         ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model);
         ResultModel AddPermission(string holderId, HolderType holder, UiPermissionCreateModel model);
+        ResultModel AddResourcePermissions(string holderId, HolderType holderType, List<Guid> permissionIds);
         ResultModel ChangeAPIAuthorizationResourcePermission(string id, bool isAuthorized);
 
         List<ResourcePermissionModel> GetResourcePermissions(string holderId, HolderType holder);
@@ -25,6 +27,7 @@ namespace Service.Interfaces
 
         ResultModel AddPermissions(string holderId, HolderType holderType, List<UiPermissionCreateModel> permissions);
         ResultModel AddPermissions(string holderId, HolderType holderType, List<ResourcePermissionCreateModel> permissions);
+        ResultModel AddUIPermissions(string holderId, HolderType holderType, List<Guid> uiIds);
 
         ResultModel CreatePermissions(List<UiPermissionCreateModel> models);
         ResultModel CreatePermissions(List<ResourcePermissionCreateModel> models);
