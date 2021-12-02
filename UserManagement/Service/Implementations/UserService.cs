@@ -307,6 +307,7 @@ namespace Service.Implementations
                         }
                     });
                 }
+                await _dbContext.Users.DeleteManyAsync(x => usernames.Contains(x.Username));
                 result.Succeed = true;
                 result.Data = true;
             }
