@@ -8,7 +8,7 @@ namespace Service.Interfaces
         PagingModel GetAll(int pageSize, int pageIndex);
         ApiModuleDetailModel GetDetail(string id);
         Task<ResultModel> Create(string apiHost, string replacementHost, string moduleName, bool doPathReplacement);
-        Task<ResultModel> Update(string moduleId, string apiHost, string replacementHost, string moduleName, string upstreamName, bool doPathReplacement);
+        Task<ResultModel> Update(ModuleUpdateModel request);
         Task<string> GetSwaggerDocument(string moduleId);
         Task<ResultModel> Delete(string id);
     }

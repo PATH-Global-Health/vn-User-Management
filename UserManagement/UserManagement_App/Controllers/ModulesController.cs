@@ -24,6 +24,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
+        [HttpPut]
+        public async Task<IActionResult> Put([FromBody] ModuleUpdateModel request)
+        {
+            var result = await _apiModuleService.Update(request);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
 
         [HttpGet]
         public IActionResult Get(int pageIndex, int pageSize = 20)

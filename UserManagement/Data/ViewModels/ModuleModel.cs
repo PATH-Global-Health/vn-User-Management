@@ -38,6 +38,15 @@ namespace Data.ViewModels
         public string ReplacementHost { get; set; }
         public string ModuleName { get; set; }
     }
+    public class ModuleUpdateModel
+    {
+        public string ModuleId { get; set; }
+        public string SwaggerHost { get; set; }
+        public string ReplacementHost { get; set; }
+        public string ModuleName { get; set; }
+        public string UpstreamName { get; set; }
+        public bool DoPathReplacement { get; set; }
+    }
 
     public class SwaggerDocument
     {

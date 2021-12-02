@@ -110,15 +110,21 @@ namespace Service.Implementations
                         NormalizedHostName = replacementHost.ToUpper().Trim(),
                         ModuleName = moduleName,
                         NormalizedModuleName = moduleName.ToUpper().Trim(),
-                        Paths = swaggerDocument.Paths.Select(path => new ApiPath
-                        {
-                            Path = path.Key,
-                            NormalizedPath = path.Key.ToUpper().Trim(),
-                            Method = GetMethodName(path.Value),
-                            NormalizedMethod = GetMethodName(path.Value).ToUpper().Trim()
-                        }).ToList(),
                         RawSwaggerDocument = (string)modifySwaggerDocumentResult.Data
                     };
+                    foreach (var path in swaggerDocument.Paths)
+                    {
+                        foreach (var method in GetMethodName(path.Value))
+                        {
+                            newModule.Paths.Add(new ApiPath
+                            {
+                                Path = path.Key,
+                                NormalizedPath = path.Key.ToUpper().Trim(),
+                                Method = method,
+                                NormalizedMethod = method.ToUpper().Trim()
+                            });
+                        }
+                    }
                     _dbContext.ApiModules.InsertOne(session, newModule);
                 }
                 else
@@ -297,11 +303,11 @@ namespace Service.Implementations
             return null;
         }
 
-        public async Task<ResultModel> Update(string moduleId, string apiHost, string replacementHost, string moduleName, string upstreamName, bool doPathReplacement)
+        public async Task<ResultModel> Update(ModuleUpdateModel request)
         {
             var result = new ResultModel();
 
-            var module = await _dbContext.ApiModules.Find(i => i.Id == moduleId).FirstOrDefaultAsync();
+            var module = await _dbContext.ApiModules.Find(i => i.Id == request.ModuleId).FirstOrDefaultAsync();
             if (module == null)
             {
                 result.ErrorMessage = "Module is not existed";
@@ -309,21 +315,21 @@ namespace Service.Implementations
             }
 
             #region Validate apiHost
-            if (string.IsNullOrEmpty(apiHost))
+            if (string.IsNullOrEmpty(request.SwaggerHost))
             {
                 result.ErrorMessage = "Invalid host name"; return result;
             }
             else
             {
-                apiHost = apiHost.Trim();
-                if (apiHost.Contains(" "))
+                request.SwaggerHost = request.SwaggerHost.Trim();
+                if (request.SwaggerHost.Contains(" "))
                 {
                     result.ErrorMessage = "Host cannot have white spaces"; return result;
                 }
-                var lastChar = apiHost.ElementAt(apiHost.Length - 1);
+                var lastChar = request.SwaggerHost.ElementAt(request.SwaggerHost.Length - 1);
                 if (lastChar == '/')
                 {
-                    apiHost = apiHost.Remove(apiHost.Length - 1);
+                    request.SwaggerHost = request.SwaggerHost.Remove(request.SwaggerHost.Length - 1);
                 }
             }
 
@@ -331,90 +337,84 @@ namespace Service.Implementations
             #endregion
 
             #region Validate replacementHost
-            if (string.IsNullOrEmpty(replacementHost))
+            if (string.IsNullOrEmpty(request.ReplacementHost))
             {
                 result.ErrorMessage = "Invalid host name"; return result;
             }
             else
             {
-                replacementHost = replacementHost.Trim();
-                if (replacementHost.Contains(" "))
+                request.ReplacementHost = request.ReplacementHost.Trim();
+                if (request.ReplacementHost.Contains(" "))
                 {
                     result.ErrorMessage = "Host cannot have white spaces"; return result;
                 }
-                var lastChar = replacementHost.ElementAt(replacementHost.Length - 1);
+                var lastChar = request.ReplacementHost.ElementAt(request.ReplacementHost.Length - 1);
                 if (lastChar == '/')
                 {
-                    replacementHost = replacementHost.Remove(replacementHost.Length - 1);
-                }
-                var existedModule = _dbContext.ApiModules.Find(i => i.NormalizedHostName == replacementHost.ToUpper()).FirstOrDefault();
-                if (existedModule != null)
-                {
-                    result.ErrorMessage = "Host is existed as module name : " + existedModule.NormalizedModuleName; return result;
+                    request.ReplacementHost = request.ReplacementHost.Remove(request.ReplacementHost.Length - 1);
                 }
             }
 
 
             #endregion
 
-            #region Validate moduleName
-            if (string.IsNullOrEmpty(moduleName))
+            #region Validate request.ModuleName
+            if (string.IsNullOrEmpty(request.ModuleName))
             {
                 result.ErrorMessage = "Invalid module name"; return result;
             }
             else
             {
-                moduleName = moduleName.Trim();
-                if (moduleName.Contains(" "))
+                request.ModuleName = request.ModuleName.Trim();
+                if (request.ModuleName.Contains(" "))
                 {
                     result.ErrorMessage = "Module name cannot have white spaces"; return result;
                 }
-                var existedModule = await _dbContext.ApiModules.Find(i => i.NormalizedModuleName == moduleName.ToUpper() && i.Id != moduleId).FirstOrDefaultAsync();
-                if (existedModule != null)
-                {
-                    result.ErrorMessage = "Module name is existed"; return result;
-                }
             }
-
-
             #endregion
 
             var session = _dbContext.StartSession(); session.StartTransaction();
             try
             {
-                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(apiHost, $"{replacementHost}/api/{upstreamName}", doPathReplacement);
+                ResultModel modifySwaggerDocumentResult = await ModifySwaggerDocument(request.SwaggerHost, $"{request.ReplacementHost}/api", request.DoPathReplacement);
                 var swaggerDocument = JsonConvert.DeserializeObject<SwaggerDocument>((string)modifySwaggerDocumentResult.Data);
                 if (swaggerDocument != null)
                 {
                     #region Update paths
                     var newPaths = new List<ApiPath>();
+                    var sourcePaths = new List<ApiPath>();
                     foreach (var apiPath in swaggerDocument.Paths)
                     {
                         var normalizedPath = apiPath.Key.ToUpper().Trim();
-                        var normalizedMethod = GetMethodName(apiPath.Value).ToUpper().Trim();
-
-                        var existedPath = module.Paths.Find(p =>
+                        foreach (var method in GetMethodName(apiPath.Value))
                         {
-                            return p.NormalizedPath == normalizedPath && p.NormalizedMethod == normalizedMethod;
-                        });
-                        if (existedPath == null)
-                        {
-                            newPaths.Add(new ApiPath
+                            var normalizedMethod = method.ToUpper().Trim();
+                            var existedPath = module.Paths.Find(p =>
+                            {
+                                return p.NormalizedPath == normalizedPath && p.NormalizedMethod == normalizedMethod;
+                            });
+                            if (existedPath == null)
+                            {
+                                newPaths.Add(new ApiPath
+                                {
+                                    Path = apiPath.Key,
+                                    NormalizedPath = normalizedPath,
+                                    Method = method,
+                                    NormalizedMethod = normalizedMethod
+                                });
+                            }
+                            sourcePaths.Add(new ApiPath
                             {
                                 Path = apiPath.Key,
                                 NormalizedPath = normalizedPath,
-                                Method = GetMethodName(apiPath.Value),
+                                Method = method,
                                 NormalizedMethod = normalizedMethod
                             });
                         }
                     }
 
                     //Find deletedPaths : Except by NormalizedPath and NormalizedMethod
-                    var deletedPaths = module.Paths.ExceptBy(swaggerDocument.Paths.Select(p => new ApiPath
-                    {
-                        NormalizedPath = p.Key.ToUpper().Trim(),
-                        NormalizedMethod = GetMethodName(p.Value).ToUpper().Trim()
-                    }), element =>
+                    var deletedPaths = module.Paths.ExceptBy(sourcePaths, element =>
                     {
                         return new { element.NormalizedPath, element.NormalizedMethod };
                     });
@@ -422,30 +422,27 @@ namespace Service.Implementations
                     //Add new api paths and add new permissions
                     if (newPaths.Any())
                     {
-                        #region Add new api paths
-                        module.Paths.AddRange(newPaths);
-                        #endregion
-
                         #region Add new resource permissions
-                        var newPermissions = newPaths.Select(path =>
+                        newPaths.AsParallel().ForEach(path =>
                         {
                             var permission = new ResourcePermission
                             {
                                 Method = path.Method,
                                 NormalizedMethod = path.NormalizedMethod,
-                                Url = $"{replacementHost}/api/{moduleName}/{upstreamName}/{path.Path}",
-                                PermissionType = Data.Enums.PermissionType.Allow
+                                Url = $"/api/{path.Path}",
+                                PermissionType = Data.Enums.PermissionType.Allow,
+                                IsAuthorizedAPI = true
                             };
                             permission.Url = permission.Url.Replace("//", "/");
-                            permission.Url = $"{replacementHost}{permission.Url}";
+                            permission.Url = $"{request.ReplacementHost}{permission.Url}";
                             permission.NormalizedUrl = permission.Url.Trim().ToUpper();
-
+                            _dbContext.ResourcePermissions.InsertOne(session, permission);
                             path.PermissionIds.Add(permission.Id);
-
-                            return permission;
                         });
+                        #endregion
 
-                        await _dbContext.ResourcePermissions.InsertManyAsync(session, newPermissions);
+                        #region Add new api paths
+                        module.Paths.AddRange(newPaths);
                         #endregion
                     }
 
@@ -503,11 +500,11 @@ namespace Service.Implementations
                     #endregion
 
                     #region Update common properties
-                    module.HostName = replacementHost;
+                    module.HostName = request.ReplacementHost;
                     module.NormalizedHostName = module.HostName.Trim().ToUpper();
-                    module.UpstreamName = upstreamName;
+                    module.UpstreamName = request.UpstreamName;
                     module.NormalizedUpstreamName = module.UpstreamName.Trim().ToUpper();
-                    module.ModuleName = moduleName;
+                    module.ModuleName = request.ModuleName;
                     module.NormalizedModuleName = module.ModuleName.Trim().ToUpper();
                     module.RawSwaggerDocument = (string)modifySwaggerDocumentResult.Data;
                     module.DateUpdated = DateTime.Now;
@@ -538,16 +535,18 @@ namespace Service.Implementations
             return result;
         }
 
-        private string GetMethodName(PathItem value)
+        private List<string> GetMethodName(PathItem value)
         {
-            if (value.Get != null) return "Get";
-            if (value.Post != null) return "Post";
-            if (value.Put != null) return "Put";
-            if (value.Delete != null) return "Delete";
-            if (value.Options != null) return "Options";
-            if (value.Head != null) return "Head";
-            if (value.Patch != null) return "Patch";
-            return "";
+            var result = new List<string>();
+
+            if (value.Get != null) result.Add("Get");
+            if (value.Post != null) result.Add("Post");
+            if (value.Put != null) result.Add("Put");
+            if (value.Delete != null) result.Add("Delete");
+            if (value.Options != null) result.Add("Options");
+            if (value.Head != null) result.Add("Head");
+            if (value.Patch != null) result.Add("Patch");
+            return result;
         }
         public async Task<ResultModel> Delete(string id)
         {
