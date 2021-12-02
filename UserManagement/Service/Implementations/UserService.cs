@@ -235,16 +235,16 @@ namespace Service.Implementations
                             return result;
                         }
                     }
-                    if (!IsUsernameAvailable(request.Username))
-                    {
-                        result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
-                        return result;
-                    }
                     if (!IsPhoneNumberAvailable(request.PhoneNumber))
                     {
                         result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                         return result;
                     }
+                }
+                if (!IsUsernameAvailable(request.Username))
+                {
+                    result.ErrorMessage = ErrorConstants.EXISTED_USERNAME;
+                    return result;
                 }
                 #endregion
 
