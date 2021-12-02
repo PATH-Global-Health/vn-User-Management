@@ -52,6 +52,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
+        [HttpPost("DeleteByUsernames")]
+        public async Task<IActionResult> DeleteAsync([FromBody] List<string> usernames)
+        {
+            var result = await _userService.Delete(usernames);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
 
         [AllowAnonymous]
         [HttpPost("Login")]

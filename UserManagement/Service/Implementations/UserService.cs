@@ -277,6 +277,46 @@ namespace Service.Implementations
 
             return result;
         }
+        public async Task<ResultModel> Delete(List<string> usernames)
+        {
+            var result = new ResultModel();
+            try
+            {
+
+                var users = await _dbContext.Users.Find(x => usernames.Contains(x.Username)).ToListAsync();
+                foreach (var user in users)
+                {
+                    // remove in groups
+                    user.GroupIds.AsParallel().ForAll(groupId =>
+                    {
+                        var group = _dbContext.Groups.Find(i => i.Id == groupId).FirstOrDefault();
+                        if (group != null)
+                        {
+                            group.UserIds.Remove(user.Id);
+                            _dbContext.Groups.ReplaceOne(i => i.Id == group.Id, group);
+                        }
+                    });
+                    //remove in roles
+                    user.RoleIds.AsParallel().ForAll(roleId =>
+                    {
+                        var role = _dbContext.Roles.Find(i => i.Id == roleId).FirstOrDefault();
+                        if (role != null)
+                        {
+                            role.UserIds.Remove(user.Id);
+                            _dbContext.Roles.ReplaceOne(i => i.Id == role.Id, role);
+                        }
+                    });
+                }
+                result.Succeed = true;
+                result.Data = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+
+            return result;
+        }
         private bool CheckValidUnverifiedAccount(UserInformation user)
         {
             var time = DateTime.Now.Subtract(user.DateUpdated).Subtract(TimeSpan.FromHours(7));

@@ -13,6 +13,7 @@ namespace Service.Interfaces
 
         Task<PagingModel> GetAll(string name, int? pageSize, int? pageIndex);
         Task<ResultModel> Create(UserCreateModel model);
+        Task<ResultModel> Delete(List<string> usernames);
         Task<ResultModel> Login(LoginModel model);
         Task<ResultModel> AnonymousLogin();
         Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId);
