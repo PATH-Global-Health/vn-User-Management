@@ -23,7 +23,7 @@ namespace Service.RabbitMQ
         private EventingBasicConsumer consumer;
         private readonly IConfiguration _configuration;
         private readonly ILogger<Consumer> _logger;
-        string queue = "DeleteUsersConsumer";
+        string queue = "DeleteUsersQueue";
         public DeleteUsersConsumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
         {
             _scopeFactory = scopeFactory;

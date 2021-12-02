@@ -38,6 +38,7 @@ namespace UserManagement_App.Extensions
             services.AddSingleton<IHostedService, CheckConfirmedUserConsumer>();
             services.AddSingleton<IHostedService, Consumer>();
             services.AddSingleton<IHostedService, HomeQuarantineConsumer>();
+            services.AddSingleton<IHostedService, DeleteUsersConsumer>();
             //services.AddHostedService<Consumer>();
 
             services.AddScoped<IProvincialService, ProvincialService>();
