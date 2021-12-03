@@ -9,6 +9,7 @@ using Service.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -1335,8 +1336,9 @@ namespace Service.Implementations
 
                     var isInt = int.TryParse(transformedSegment, out var o);
                     var isGuid = Guid.TryParse(transformedSegment, out var g);
+                    var isDate = DateTime.TryParseExact(transformedSegment, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d);
 
-                    if ((isInt || isGuid) || (segments[i].Contains("{") && segments[i].Contains("}")))
+                    if ((isInt || isGuid) || isDate || (segments[i].Contains("{") && segments[i].Contains("}")))
                     {
                         segments[i] = "{ROUTEPARAM}";
                         if (i != segments.Count - 1)
