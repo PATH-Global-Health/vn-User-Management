@@ -14,8 +14,12 @@ namespace UserManagement_App
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup()
         {
+            var configuration = new ConfigurationBuilder()
+                              .AddJsonFile("appsettings.json")
+                              .AddEnvironmentVariables()
+                              .Build();
             Configuration = configuration;
         }
 
