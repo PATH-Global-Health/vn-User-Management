@@ -52,13 +52,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
-        [HttpPost("DeleteByUsernames")]
-        public async Task<IActionResult> DeleteAsync([FromBody] List<string> usernames)
-        {
-            var result = await _userService.Delete(usernames);
-            if (result.Succeed) return Ok(result.Data);
-            return BadRequest(result.ErrorMessage);
-        }
+        //[HttpPost("DeleteByUsernames")]
+        //public async Task<IActionResult> DeleteAsync([FromBody] List<string> usernames)
+        //{
+        //    var result = await _userService.Delete(usernames);
+        //    if (result.Succeed) return Ok(result.Data);
+        //    return BadRequest(result.ErrorMessage);
+        //}
 
         [AllowAnonymous]
         [HttpPost("Login")]
@@ -109,13 +109,13 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpPost("Tools/ImportUsers")]
-        public IActionResult ImportUsers([FromBody] List<ImportUserModel> model)
-        {
-            var result = _userService.ImportUsers(model);
-            if (result.Succeed) return Ok(result.Data);
-            return BadRequest(result.ErrorMessage);
-        }
+        //[HttpPost("Tools/ImportUsers")]
+        //public IActionResult ImportUsers([FromBody] List<ImportUserModel> model)
+        //{
+        //    var result = _userService.ImportUsers(model);
+        //    if (result.Succeed) return Ok(result.Data);
+        //    return BadRequest(result.ErrorMessage);
+        //}
 
         [HttpGet("Permissions/Ui")]
         public IActionResult GetUiPermissions()
@@ -222,16 +222,16 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpGet("ValidateCredential")]
-        public async Task<IActionResult> ValidateCredential()
-        {
-            var userId = User.GetId();
-            var credential = User.GetCredential();
+        //[HttpGet("ValidateCredential")]
+        //public async Task<IActionResult> ValidateCredential()
+        //{
+        //    var userId = User.GetId();
+        //    var credential = User.GetCredential();
 
-            var result = await _userService.ValidateTokenCredential(userId, credential);
-            if (result.Succeed) return Ok();
-            return Unauthorized();
-        }
+        //    var result = await _userService.ValidateTokenCredential(userId, credential);
+        //    if (result.Succeed) return Ok();
+        //    return Unauthorized();
+        //}
 
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
@@ -248,27 +248,27 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpPut("Tools/UpdateCredentials")]
-        public void UpdateCredentials()
-        {
-            _userService.UpdateTokenCredentail();
-        }
+        //[HttpPut("Tools/UpdateCredentials")]
+        //public void UpdateCredentials()
+        //{
+        //    _userService.UpdateTokenCredentail();
+        //}
 
-        [HttpPut("{id}/Disable")]
+        /*[HttpPut("{id}/Disable")]
         public IActionResult DisableUser(string id)
         {
             var result = _userService.DisableUser(id);
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
-
-        [HttpPut("{id}/Enable")]
-        public IActionResult EnableUser(string id)
-        {
-            var result = _userService.EnableUser(id);
-            if (result.Succeed) return Ok();
-            return BadRequest(result.ErrorMessage);
-        }
+        */
+        //[HttpPut("{id}/Enable")]
+        //public IActionResult EnableUser(string id)
+        //{
+        //    var result = _userService.EnableUser(id);
+        //    if (result.Succeed) return Ok();
+        //    return BadRequest(result.ErrorMessage);
+        //}
         [HttpGet("GetUserInfo")]
         public async Task<IActionResult> GetUserInfo()
         {
@@ -356,16 +356,17 @@ namespace UserManagement_App.Controllers
             }
             return BadRequest(login.ErrorMessage);
         }
-        [AllowAnonymous]
-        [HttpPost("TestRabbitMQ")]
-        public IActionResult TestRabbitMQ(string username)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-            _userService.TestRabbitMQ(username);
-            return Ok();
-        }
+
+        //[HttpPost("TestRabbitMQ")]
+        //[AllowAnonymous]
+        //public IActionResult TestRabbitMQ(string username)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest();
+        //    }
+        //    _userService.TestRabbitMQ(username);
+        //    return Ok();
+        //}
     }
 }
