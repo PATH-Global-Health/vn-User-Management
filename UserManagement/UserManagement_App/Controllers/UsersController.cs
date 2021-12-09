@@ -222,16 +222,16 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        //[HttpGet("ValidateCredential")]
-        //public async Task<IActionResult> ValidateCredential()
-        //{
-        //    var userId = User.GetId();
-        //    var credential = User.GetCredential();
+        [HttpGet("ValidateCredential")]
+        public async Task<IActionResult> ValidateCredential()
+        {
+            var userId = User.GetId();
+            var credential = User.GetCredential();
 
-        //    var result = await _userService.ValidateTokenCredential(userId, credential);
-        //    if (result.Succeed) return Ok();
-        //    return Unauthorized();
-        //}
+            var result = await _userService.ValidateTokenCredential(userId, credential);
+            if (result.Succeed) return Ok();
+            return Unauthorized();
+        }
 
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordModel model)
