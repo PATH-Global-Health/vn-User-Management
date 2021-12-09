@@ -60,14 +60,14 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-        //[HttpPost("Resource/Validate")]
-        //public IActionResult ValidateResourcePermission([FromBody] ResourcePermissionValidationModel model)
-        //{
-        //    var userId = User.GetId();
-        //    var result = _permissionsService.Validate(model, userId);
-        //    if (result.Succeed) return Ok();
-        //    return StatusCode(401);
-        //}
+        [HttpPost("Resource/Validate")]
+        public IActionResult ValidateResourcePermission([FromBody] ResourcePermissionValidationModel model)
+        {
+            var userId = User.GetId();
+            var result = _permissionsService.Validate(model, userId);
+            if (result.Succeed) return Ok();
+            return StatusCode(401);
+        }
 
         //[HttpGet("Resource/Success")]
         //public IActionResult ValidateSuccess()
