@@ -50,7 +50,7 @@ namespace UserManagement_App
             mongoDbContext.SeedData();
 
             app.UseCors("AllowAll");
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
