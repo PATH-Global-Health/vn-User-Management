@@ -14,6 +14,7 @@ namespace Data.ViewModels
         public string NormalizedUrl { get; set; }
         public string Method { get; set; }
         public string NormalizedMethod { get; set; }
+        public bool? IsAuthorizedAPI { get; set; }
 
         public PermissionType PermissionType { get; set; }
     }
