@@ -356,9 +356,8 @@ namespace UserManagement_App.Controllers
             }
             return BadRequest(login.ErrorMessage);
         }
-
-        //[HttpPost("TestRabbitMQ")]
         //[AllowAnonymous]
+        //[HttpPost("TestRabbitMQ")]
         //public IActionResult TestRabbitMQ(string username)
         //{
         //    if (!ModelState.IsValid)
@@ -368,5 +367,12 @@ namespace UserManagement_App.Controllers
         //    _userService.TestRabbitMQ(username);
         //    return Ok();
         //}
+        [HttpPost("LogOut")]
+        public async Task<IActionResult> LogOut()
+        {
+            var result = await _userService.LogOut(User?.FindFirst("Username")?.Value);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }

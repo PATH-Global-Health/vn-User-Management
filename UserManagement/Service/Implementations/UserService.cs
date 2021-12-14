@@ -1397,5 +1397,27 @@ namespace Service.Implementations
                 //CustomerId = user.Id
             }));
         }
+        public async Task<ResultModel> LogOut(string username)
+        {
+            var result = new ResultModel();
+            try
+            {
+                username = username.ToUpper();
+                var user = await _dbContext.Users.Find(i => i.NormalizedUsername == username)
+                    .FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    throw new Exception(ErrorConstants.NOT_EXIST_ACCOUNT);
+                }
+                var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.NormalizedUsername == username,
+                    Builders<UserInformation>.Update.Set(x => x.HashedCredential, null));
+                result.Succeed = true;
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }
