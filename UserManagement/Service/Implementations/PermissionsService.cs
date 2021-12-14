@@ -22,7 +22,7 @@ namespace Service.Implementations
         private readonly IMapper _mapper;
 
         #region Special Roles
-        private const string SUPER_ADMIN_ROLE = "SUPERADMIN";
+        private const string SUPER_ADMIN_ROLE = "longhdt";
         #endregion
 
         public PermissionsService(ApplicationDbContext dbContext, IMapper mapper)
