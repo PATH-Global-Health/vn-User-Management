@@ -101,7 +101,7 @@ namespace Service.RabbitMQ.RPC.Servers
                 {
                     var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionsService>();
 
-                    result = permissionService.Validate(new ResourcePermissionValidationModel { ApiPath = model.ApiPath, Method = model.Method }, model.UserId);
+                    result = permissionService.Validate(new ResourcePermissionValidationModel { ApiPath = model.ApiPath, Method = model.Method, TokenCredential = model.TokenCredential }, model.UserId);
                     return result;
                 }
             }
