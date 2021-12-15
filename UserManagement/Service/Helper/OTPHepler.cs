@@ -10,13 +10,14 @@ namespace Service.Helper
             return new OTP()
             {
                 Value = new Random().Next(100000, 999999).ToString(),
-                ExpiredTime = DateTime.Now.AddMinutes(5),
+                ExpiredTime = DateTime.Now.AddSeconds(60),
+                AccessFailedCount = 0,
             };
         }
 
         public static bool ValidateOTP(string checkOTP, OTP otp)
         {
-            if (otp == null || otp.ExpiredTime < DateTime.Now || checkOTP != otp.Value)
+            if (otp == null || otp.ExpiredTime < DateTime.Now || checkOTP != otp.Value || otp.AccessFailedCount >= 3)
                 return false;
             return true;
         }

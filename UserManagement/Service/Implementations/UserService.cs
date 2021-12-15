@@ -137,7 +137,7 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                         return result;
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
@@ -158,7 +158,7 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                         return result;
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
@@ -833,10 +833,18 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = ErrorConstants.NOT_EXISTED_PHONENUMBER;
                     }
-                    else if (!OTPHepler.ValidateOTP(model.OTP, user?.OTP) && !model.OTP.Contains("99"))
-                    //else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    else if (!OTPHepler.ValidateOTP(model.OTP, user?.OTP))
                     {
-                        result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
+                        if (user.OTP.AccessFailedCount >= 3)
+                        {
+                            result.ErrorMessage = ErrorConstants.OVER_FAILED_TIMES_OTP;
+                        }
+                        else
+                        {
+                            user.OTP.AccessFailedCount++;
+                            await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, user.OTP));
+                            result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
+                        }
                     }
                     else
                     {
@@ -855,7 +863,16 @@ namespace Service.Implementations
                     }
                     else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
                     {
-                        result.ErrorMessage = "OTP is incorrect or expired";
+                        if (user.OTP.AccessFailedCount >= 3)
+                        {
+                            result.ErrorMessage = ErrorConstants.OVER_FAILED_TIMES_OTP;
+                        }
+                        else
+                        {
+                            user.OTP.AccessFailedCount++;
+                            await _dbContext.Users.UpdateOneAsync(x => x.Id == user.Id, Builders<UserInformation>.Update.Set(x => x.OTP, user.OTP));
+                            result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
+                        }
                     }
                     else
                     {
@@ -1302,8 +1319,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = "User does not exist";
                     }
-                    //else if (!request.OTP.Contains("99"))
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
+                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }

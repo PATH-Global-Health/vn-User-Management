@@ -101,6 +101,7 @@ namespace Data.ViewModels
         public string Value { get; set; }
         [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime ExpiredTime { get; set; }
+        public int AccessFailedCount { get; set; } = 0;
     }
     public class ChangeSecurityQuestionAnswerModel
     {
