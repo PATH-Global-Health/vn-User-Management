@@ -33,11 +33,11 @@ namespace Service.RabbitMQ.RPC.Servers
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: "ValidatePermissionDemo", durable: false,
+            channel.QueueDeclare(queue: "ValidatePermissionGod", durable: false,
               exclusive: false, autoDelete: false, arguments: null);
             channel.BasicQos(0, 1, false);
             consumer = new EventingBasicConsumer(channel);
-            channel.BasicConsume(queue: "ValidatePermissionDemo",
+            channel.BasicConsume(queue: "ValidatePermissionGod",
               autoAck: false, consumer: consumer);
             #endregion
         }
