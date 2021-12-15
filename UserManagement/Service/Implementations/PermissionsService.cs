@@ -3,6 +3,7 @@ using Data.DataAccess;
 using Data.Enums;
 using Data.MongoCollections;
 using Data.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using MoreLinq;
 using Service.Interfaces;
@@ -20,15 +21,17 @@ namespace Service.Implementations
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         #region Special Roles
-        private const string SUPER_ADMIN_ROLE = "SUPERADMIN";
+        private const string SUPER_ADMIN_ROLE = "LONGHDT";
         #endregion
 
-        public PermissionsService(ApplicationDbContext dbContext, IMapper mapper)
+        public PermissionsService(ApplicationDbContext dbContext, IMapper mapper, IServiceScopeFactory scopeFactory)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _scopeFactory = scopeFactory;
         }
 
         #region Resource Permission
@@ -1235,6 +1238,17 @@ namespace Service.Implementations
             } //return if API is not authorized API
             #endregion
             #region Authorized API
+            //validate token
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
+                result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
+                if (!result.Succeed)
+                    return result;
+            }
+
+            //validate permission
             var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
             if (user != null)
             {

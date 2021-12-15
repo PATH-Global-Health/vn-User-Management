@@ -115,6 +115,7 @@ namespace Service.RabbitMQ.RPC.Servers
         class PermissionCheckMessageModel
         {
             public string UserId { get; set; }
+            public string TokenCredential { get; set; }
             public string ApiPath { get; set; }
             public string Method { get; set; }
         }

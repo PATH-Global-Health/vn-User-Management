@@ -46,5 +46,6 @@ namespace Service.Interfaces
         Task<ResultModel> IsConfirmdUser(string username);
         void TestRabbitMQ(string username);
         Task<ResultModel> CreateOrUpdateUserElasticSearch(string fullname, string username, string password, string email, bool isUpdate = false);
+        Task<ResultModel> LogOut(string username);
     }
 }
