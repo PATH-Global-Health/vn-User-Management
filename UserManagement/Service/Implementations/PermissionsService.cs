@@ -1239,14 +1239,15 @@ namespace Service.Implementations
             #endregion
             #region Authorized API
             //validate token
-            using (var scope = _scopeFactory.CreateScope())
-            {
-                var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+            if (!string.IsNullOrEmpty(model.TokenCredential))
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-                result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
-                if (!result.Succeed)
-                    return result;
-            }
+                    result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
+                    if (!result.Succeed)
+                        return result;
+                }
 
             //validate permission
             var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();

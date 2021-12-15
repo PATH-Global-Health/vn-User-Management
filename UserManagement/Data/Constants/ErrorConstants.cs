@@ -21,6 +21,7 @@ namespace Data.Constants
         public const string NOT_EXIST_ACCOUNT = "NOT_EXIST_ACCOUNT";
         public const string REQUIRED_PHONE_NUMBER = "REQUIRED_PHONE_NUMBER";
         public const string INCORRECT_OTP = "INCORRECT_OTP";
+        public const string OVER_FAILED_TIMES_OTP = "OVER_FAILED_TIMES_OTP";
         public const string UNDEFINED_PHONENUMBER = "UNDEFINED_PHONENUMBER";
         public const string IS_CONFIRMED = "IS_CONFIRMED";
     }
