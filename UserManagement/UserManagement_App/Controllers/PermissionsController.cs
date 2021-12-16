@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Data.Enums;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -158,6 +159,12 @@ namespace UserManagement_App.Controllers
         }
 
         #endregion
+        [HttpPost("Tools/FixUrlFormat")]
+        public async Task<IActionResult> FixUrlFormatAsync()
+        {
+            var result = await _permissionsService.FixUrlFormat();
+            return Ok(result);
+        }
 
     }
 }

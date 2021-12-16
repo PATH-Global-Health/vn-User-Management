@@ -3,6 +3,8 @@ using Data.DataAccess;
 using Data.Enums;
 using Data.MongoCollections;
 using Data.ViewModels;
+using Data.ViewModels.Users;
+using LazyCache;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using MoreLinq;
@@ -22,16 +24,19 @@ namespace Service.Implementations
         private readonly ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IAppCache _cache;
 
         #region Special Roles
         private const string SUPER_ADMIN_ROLE = "LONGHDT";
         #endregion
 
-        public PermissionsService(ApplicationDbContext dbContext, IMapper mapper, IServiceScopeFactory scopeFactory)
+        public PermissionsService(ApplicationDbContext dbContext, IMapper mapper,
+            IServiceScopeFactory scopeFactory, IAppCache cache)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _scopeFactory = scopeFactory;
+            _cache = cache;
         }
 
         #region Resource Permission
@@ -44,6 +49,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRolePermissions(holderId, permissions); break;
                 case HolderType.Group: result = AddGroupPermissions(holderId, permissions); break;
             }
+            ClearCache();
             return result;
         }
         public ResultModel AddResourcePermissions(string holderId, HolderType holderType, List<Guid> permissionIds)
@@ -55,6 +61,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRoleResourcePermissions(holderId, permissionIds); break;
                 case HolderType.Group: result = AddGroupResourcePermissions(holderId, permissionIds); break;
             }
+            ClearCache();
             return result;
         }
         public ResultModel AddPermission(string holderId, HolderType holder, ResourcePermissionCreateModel model)
@@ -72,6 +79,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRolePermission(holderId, model); break;
                 case HolderType.Group: result = AddGroupPermission(holderId, model); break;
             }
+            ClearCache();
             return result;
         }
         public ResultModel ChangeAPIAuthorizationResourcePermission(string id, bool isAuthorized)
@@ -90,6 +98,7 @@ namespace Service.Implementations
                 return result;
             }
             result.Succeed = true;
+            ClearCache();
             return result;
         }
 
@@ -439,6 +448,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRolePermissions(holderId, permissions); break;
                 case HolderType.Group: result = AddGroupPermissions(holderId, permissions); break;
             }
+            ClearCache();
             return result;
         }
         public ResultModel AddUIPermissions(string holderId, HolderType holderType, List<Guid> uiIds)
@@ -450,6 +460,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRoleUIPermissions(holderId, uiIds); break;
                 case HolderType.Group: result = AddGroupUIPermissions(holderId, uiIds); break;
             }
+            ClearCache();
             return result;
         }
 
@@ -462,6 +473,7 @@ namespace Service.Implementations
                 case HolderType.Role: result = AddRolePermission(holderId, model); break;
                 case HolderType.Group: result = AddGroupPermission(holderId, model); break;
             }
+            ClearCache();
             return result;
         }
 
@@ -1212,26 +1224,31 @@ namespace Service.Implementations
 
         public ResultModel Validate(ResourcePermissionValidationModel model, string userId)
         {
+            var caches = GetFromCache().Result;
             var result = new ResultModel();
-
             #region Unauthorized API
-            var resourcePermissions = _dbContext.ResourcePermissions.Find(p => !(p.IsAuthorizedAPI == true)).ToList();
-            var _lock = new object();
-            Parallel.ForEach(Partitioner.Create(resourcePermissions), (permission, state) =>
-            {
-                var validUri = SegmentsEqual(GetSegments(model.ApiPath), GetSegments(permission.NormalizedUrl));
-                var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
-                var allowedPermission = permission.PermissionType == PermissionType.Allow;
+            var segments = GetSegments(model.ApiPath);
+            var transformSegments = TransformSegments(segments, false);
+            string formattedUrl = string.Join("/", transformSegments);
 
-                if (validUri && validMethod && allowedPermission)
-                {
-                    lock (_lock)
-                    {
-                        result.Succeed = true;
-                        state.Stop();
-                    }
-                }
-            });
+            // from DB
+            //var unAuthorizedPermissionFilters = Builders<ResourcePermission>.Filter.Eq(x => x.IsAuthorizedAPI, false)
+            //    & Builders<ResourcePermission>.Filter.Eq(x => x.NormalizedMethod, model.Method.ToUpper())
+            //    & Builders<ResourcePermission>.Filter.Eq(x => x.PermissionType, PermissionType.Allow)
+            //    & Builders<ResourcePermission>.Filter.Eq(x => x.NormalizedUrl, formattedUrl.ToUpper())
+            //    ;
+
+            //var unAuthorizedPermissionCount = _dbContext.ResourcePermissions
+            //    .Find(unAuthorizedPermissionFilters).CountDocuments();
+
+            // from Cache
+            var unAuthorizedPermissionCount = caches.Where(x => x.IsAuthorizedAPI == false
+            && x.NormalizedMethod == model.Method.ToUpper()
+            && x.PermissionType == PermissionType.Allow
+            && x.NormalizedUrl == formattedUrl.ToUpper()
+            ).Count();
+
+            result.Succeed = unAuthorizedPermissionCount > 0;
             if (result.Succeed)
             {
                 return result;
@@ -1239,30 +1256,30 @@ namespace Service.Implementations
             #endregion
             #region Authorized API
             //validate token
-            if (!string.IsNullOrEmpty(model.TokenCredential))
-                using (var scope = _scopeFactory.CreateScope())
-                {
-                    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-
-                    result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
-                    if (!result.Succeed)
-                        return result;
-                }
+            using var scope = _scopeFactory.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+            result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
+            if (!result.Succeed)
+                return result;
+            var user = (UserCacheModel)result.Data;
 
             //validate permission
-            var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
             if (user != null)
             {
-                if (IsSpecialUser(user))
+                if (IsSpecialUser(user.NormalizedUsername))
                 {
                     result.Succeed = true;
                     return result;
                 }
-                var groupFilters = Builders<Group>.Filter.In(i => i.Id, user.GroupIds);
-                var groupsOfUser = _dbContext.Groups.Find(groupFilters).ToList();
+                var groupService = scope.ServiceProvider.GetRequiredService<IGroupService>();
+                //var groupFilters = Builders<Group>.Filter.In(i => i.Id, user.GroupIds);
+                //var groupsOfUser = _dbContext.Groups.Find(groupFilters).ToList();
+                var groupsOfUser = groupService.GetFromCache().Result.Where(x => user.GroupIds.Contains(x.Id)).ToList();
 
-                var roleFilters = Builders<Role>.Filter.In(i => i.Id, user.RoleIds);
-                var rolesOfUser = _dbContext.Roles.Find(roleFilters).ToList();
+                var roleService = scope.ServiceProvider.GetRequiredService<IRoleService>();
+                //var roleFilters = Builders<Role>.Filter.In(i => i.Id, user.RoleIds);
+                //var rolesOfUser = _dbContext.Roles.Find(roleFilters).ToList();
+                var rolesOfUser = roleService.GetFromCache().Result.Where(x => user.RoleIds.Contains(x.Id)).ToList();
 
                 var permissionIds = new List<string>();
                 groupsOfUser.ForEach(group =>
@@ -1294,26 +1311,22 @@ namespace Service.Implementations
                         permissionIds.Add(s);
                     }
                 });
+                //var permissionFilters = Builders<ResourcePermission>.Filter.Eq(x => x.IsAuthorizedAPI, true)
+                //    & Builders<ResourcePermission>.Filter.In(p => p.Id, permissionIds)
+                //      & Builders<ResourcePermission>.Filter.Eq(x => x.NormalizedMethod, model.Method.ToUpper())
+                //      & Builders<ResourcePermission>.Filter.Eq(x => x.PermissionType, PermissionType.Allow)
+                //      & Builders<ResourcePermission>.Filter.Eq(x => x.NormalizedUrl, formattedUrl.ToUpper())
+                //      ;
+                //var permissionCount = _dbContext.ResourcePermissions.Find(permissionFilters).CountDocuments();
 
-                var permissionFilters = Builders<ResourcePermission>.Filter.In(p => p.Id, permissionIds);
-                var permissions = _dbContext.ResourcePermissions.Find(permissionFilters).ToList();
-
-                _lock = new object();
-                Parallel.ForEach(Partitioner.Create(permissions), (permission, state) =>
-                {
-                    var validUri = SegmentsEqual(GetSegments(model.ApiPath), GetSegments(permission.NormalizedUrl));
-                    var validMethod = model.Method.ToUpper() == permission.NormalizedMethod;
-                    var allowedPermission = permission.PermissionType == PermissionType.Allow;
-
-                    if (validUri && validMethod && allowedPermission)
-                    {
-                        lock (_lock)
-                        {
-                            result.Succeed = true;
-                            state.Stop();
-                        }
-                    }
-                });
+                //from Cache
+                var permissionCount = caches.Where(x => x.IsAuthorizedAPI == true
+                    && permissionIds.Contains(x.Id)
+                    && x.NormalizedMethod == model.Method.ToUpper()
+                    && x.PermissionType == PermissionType.Allow
+                    && x.NormalizedUrl == formattedUrl.ToUpper()
+                    ).Count();
+                result.Succeed = permissionCount > 0;
                 return result;
             }
 
@@ -1321,9 +1334,9 @@ namespace Service.Implementations
             #endregion
         }
 
-        private bool IsSpecialUser(UserInformation user)
+        private bool IsSpecialUser(string normalizedUsername)
         {
-            return user.NormalizedUsername == SUPER_ADMIN_ROLE;
+            return normalizedUsername == SUPER_ADMIN_ROLE;
         }
 
         private List<string> GetSegments(string apiPath)
@@ -1340,7 +1353,7 @@ namespace Service.Implementations
             return segment1.SequenceEqual(segment2);
         }
 
-        private List<string> TransformSegments(List<string> segments)
+        private List<string> TransformSegments(List<string> segments, bool isToUpper = true)
         {
             for (int i = 0; i < segments.Count; i++)
             {
@@ -1355,7 +1368,8 @@ namespace Service.Implementations
 
                     if ((isInt || isGuid) || isDate || (segments[i].Contains("{") && segments[i].Contains("}")))
                     {
-                        segments[i] = "{ROUTEPARAM}";
+                        //segments[i] = "{ROUTEPARAM}";
+                        segments[i] = "{P}";
                         if (i != segments.Count - 1)
                         {
                             segments[i] += $"/";
@@ -1370,7 +1384,7 @@ namespace Service.Implementations
                     }
                     else
                     {
-                        segments[i] = segments[i].ToUpper();
+                        segments[i] = isToUpper ? segments[i].ToUpper() : segments[i];
                     }
                 }
             }
@@ -1404,6 +1418,7 @@ namespace Service.Implementations
             {
                 result.ErrorMessage = e.Message;
             }
+            ClearCache();
             return result;
         }
 
@@ -1441,6 +1456,7 @@ namespace Service.Implementations
             {
                 result.ErrorMessage = e.Message;
             }
+            ClearCache();
             return result;
         }
 
@@ -1459,11 +1475,36 @@ namespace Service.Implementations
             {
                 result.ErrorMessage = e.Message;
             }
+            ClearCache();
             return result;
         }
 
         #endregion
 
-
+        //Tools
+        public async Task<string> FixUrlFormat()
+        {
+            var resources = await _dbContext.ResourcePermissions.Find(x => true).ToListAsync();
+            foreach (var resource in resources)
+            {
+                var segments = GetSegments(resource.Url);
+                var transformSegments = TransformSegments(segments, false);
+                string formattedUrl = string.Join("/", transformSegments);
+                resource.Url = formattedUrl;
+                resource.NormalizedUrl = formattedUrl.ToUpper();
+                await _dbContext.ResourcePermissions.ReplaceOneAsync(x => x.Id == resource.Id, resource);
+            }
+            ClearCache();
+            return "success";
+        }
+        public async Task<List<ResourcePermission>> GetFromCache()
+        {
+            var model = await _cache.GetOrAddAsync("ResourcePermissionCacheKey", async () =>
+            {
+                return await _dbContext.ResourcePermissions.Find(x => true).ToListAsync();
+            }, new TimeSpan(12, 0, 0));
+            return model;
+        }
+        public void ClearCache() => _cache.Remove("ResourcePermissionCacheKey");
     }
 }

@@ -3,11 +3,13 @@ using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
+using LazyCache;
 using MongoDB.Driver;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
@@ -15,11 +17,13 @@ namespace Service.Implementations
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly IAppCache _cache;
 
-        public GroupService(ApplicationDbContext context, IMapper mapper)
+        public GroupService(ApplicationDbContext context, IMapper mapper, IAppCache cache)
         {
             _dbContext = context;
             _mapper = mapper;
+            _cache = cache;
         }
 
         public ICollection<GroupOverviewModel> GetAll()
@@ -62,7 +66,8 @@ namespace Service.Implementations
 
             result.Data = newGroup.Id;
 
-            return result;
+            ClearCache();
+                return result;
         }
         public ResultModel Update(string groupId, GroupUpdateModel model)
         {
@@ -122,6 +127,7 @@ namespace Service.Implementations
             {
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
             }
+            ClearCache();
             return result;
         }
 
@@ -281,5 +287,22 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<List<Group>> GetFromCache()
+        {
+            var model = await _cache.GetOrAddAsync("GroupCacheKey", async () =>
+            {
+                var result = await _dbContext.Groups.Find(x => true).Project(
+                    x => new Group
+                    {
+                        Id = x.Id,
+                        ResourcePermissionIds = x.ResourcePermissionIds,
+                    }
+                    ).ToListAsync();
+                return result;
+            }, new TimeSpan(12, 0, 0));
+            return model;
+        }
+        public void ClearCache() => _cache.Remove("GroupCacheKey");
     }
 }

@@ -37,7 +37,7 @@ namespace UserManagement_App
             services.AddAutoMapper(typeof(UserInformationMappingProfile));
             services.AddLogging();
             services.AddHttpClient();
-
+            services.AddLazyCache();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext)

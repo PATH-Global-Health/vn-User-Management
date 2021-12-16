@@ -7,6 +7,7 @@ using Data.ViewModels.ElasticSearchs;
 using Data.ViewModels.ProfileAPIs;
 using Data.ViewModels.Users;
 using Flurl.Http;
+using LazyCache;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -43,11 +44,12 @@ namespace Service.Implementations
         private readonly IVerifyUserPublisher _publisher;
         private readonly ElasticSettings _elasticSettings;
         private readonly IGroupService _groupService;
+        private readonly IAppCache _cache;
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
                 ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings,
-                IGroupService groupService)
+                IGroupService groupService, IAppCache cache)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -60,6 +62,7 @@ namespace Service.Implementations
             _publisher = publisher;
             _elasticSettings = elasticSettings;
             _groupService = groupService;
+            _cache = cache;
         }
 
         public async Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId)
@@ -102,6 +105,7 @@ namespace Service.Implementations
 
                 result.Data = GetAccessToken(user);
                 result.Succeed = true;
+                ClearCache();
             }
             catch (Exception e)
             {
@@ -269,6 +273,7 @@ namespace Service.Implementations
                 _groupService.AddUsersByGroupName(request.GroupName, new List<string> { user.Id });
                 result.Succeed = true;
                 result.Data = user.Id;
+                ClearCache();
             }
             catch (Exception e)
             {
@@ -439,6 +444,7 @@ namespace Service.Implementations
 
                 result.Data = accessToken;
                 result.Succeed = true;
+                ClearCache();
             }
             catch (Exception e)
             {
@@ -1006,7 +1012,10 @@ namespace Service.Implementations
 
             try
             {
-                var user = await _dbContext.Users.Find(i => i.Id == userId).FirstOrDefaultAsync();
+                //var user = await _dbContext.Users.Find(i => i.Id == userId).FirstOrDefaultAsync();
+                // from cache
+                var caches = await GetFromCache();
+                var user = caches.FirstOrDefault(i => i.Id == userId);
                 if (user == null)
                 {
                     result.ErrorMessage = "Invalid user";
@@ -1026,6 +1035,7 @@ namespace Service.Implementations
                 }
 
                 result.Succeed = true;
+                result.Data = user;
             }
             catch (Exception e)
             {
@@ -1428,6 +1438,7 @@ namespace Service.Implementations
                 var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.NormalizedUsername == username,
                     Builders<UserInformation>.Update.Set(x => x.HashedCredential, null));
                 result.Succeed = true;
+                ClearCache();
             }
             catch (Exception e)
             {
@@ -1435,5 +1446,24 @@ namespace Service.Implementations
             }
             return result;
         }
+        public async Task<List<UserCacheModel>> GetFromCache()
+        {
+            var model = await _cache.GetOrAddAsync("UserInformationCacheKey", async () =>
+            {
+                var result = await _dbContext.Users.Find(x => true).Project(
+                    x => new UserCacheModel
+                    {
+                        Id = x.Id,
+                        HashedCredential = x.HashedCredential,
+                        GroupIds = x.GroupIds,
+                        ResourcePermissionIds = x.ResourcePermissionIds,
+                        RoleIds = x.RoleIds,
+                    }
+                    ).ToListAsync();
+                return result;
+            }, new TimeSpan(12, 0, 0));
+            return model;
+        }
+        public void ClearCache() => _cache.Remove("UserInformationCacheKey");
     }
 }
