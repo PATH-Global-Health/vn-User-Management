@@ -24,7 +24,7 @@ namespace Service.RabbitMQ
             _factory = new ConnectionFactory();
             // bind configuaration from appsettings.json
             _configuration.Bind("RabbitMqConnection", _factory);
-            //_factory.ClientProvidedName = "Examination Publisher 2" + " | Examination";
+            _factory.ClientProvidedName = "VerifyUserPublisher";
         }
 
         public void Publish(string message)

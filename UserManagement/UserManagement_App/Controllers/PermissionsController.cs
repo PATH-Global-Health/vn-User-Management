@@ -60,6 +60,7 @@ namespace UserManagement_App.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
+        [AllowAnonymous]
         [HttpPost("Resource/Validate")]
         public IActionResult ValidateResourcePermission([FromBody] ResourcePermissionValidationModel model)
         {
