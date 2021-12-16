@@ -2,6 +2,7 @@
 using Data.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Service.Interfaces
 {
@@ -31,5 +32,6 @@ namespace Service.Interfaces
 
         ResultModel CreatePermissions(List<UiPermissionCreateModel> models);
         ResultModel CreatePermissions(List<ResourcePermissionCreateModel> models);
+        Task<string> FixUrlFormat();
     }
 }

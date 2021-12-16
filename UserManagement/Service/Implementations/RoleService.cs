@@ -3,11 +3,13 @@ using Data.Constants;
 using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
+using LazyCache;
 using MongoDB.Driver;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
@@ -15,11 +17,13 @@ namespace Service.Implementations
     {
         private readonly IMapper _mapper;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IAppCache _cache;
 
-        public RoleService(IMapper mapper, ApplicationDbContext dbContext)
+        public RoleService(IMapper mapper, ApplicationDbContext dbContext, IAppCache cache)
         {
             _mapper = mapper;
             _dbContext = dbContext;
+            _cache = cache;
         }
 
         public ResultModel AddUsers(string roleId, List<string> userIds)
@@ -68,6 +72,7 @@ namespace Service.Implementations
             _dbContext.Roles.InsertOne(newRole);
             result.Succeed = true;
             result.Data = newRole.Id;
+            ClearCache();
             return result;
         }
 
@@ -105,6 +110,7 @@ namespace Service.Implementations
             {
                 result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
             }
+            ClearCache();
             return result;
         }
 
@@ -193,5 +199,21 @@ namespace Service.Implementations
             }
             return result;
         }
+        public async Task<List<Role>> GetFromCache()
+        {
+            var model = await _cache.GetOrAddAsync("RoleCacheKey", async () =>
+            {
+                var result = await _dbContext.Roles.Find(x => true).Project(
+                    x => new Role
+                    {
+                        Id = x.Id,
+                        ResourcePermissionIds = x.ResourcePermissionIds,
+                    }
+                    ).ToListAsync();
+                return result;
+            }, new TimeSpan(12, 0, 0));
+            return model;
+        }
+        public void ClearCache() => _cache.Remove("RoleCacheKey");
     }
 }

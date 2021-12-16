@@ -1,5 +1,7 @@
-﻿using Data.ViewModels;
+﻿using Data.MongoCollections;
+using Data.ViewModels;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Service.Interfaces
 {
@@ -20,5 +22,6 @@ namespace Service.Interfaces
 
         List<RoleModel> GetRoles(string id);
         List<UserInformationModel> GetUsers(string id);
+        Task<List<Group>> GetFromCache();
     }
 }
