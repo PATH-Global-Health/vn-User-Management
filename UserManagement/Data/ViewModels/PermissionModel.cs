@@ -94,6 +94,7 @@ namespace Data.ViewModels
         public string ApiPath { get; set; }
         public string Method { get; set; }
         public string TokenCredential { get; set; }
+        public string UserId { get; set; }
     }
 
     public class MQPermissionValidationMessageModel

@@ -64,7 +64,7 @@ namespace UserManagement_App.Controllers
         [HttpPost("Resource/Validate")]
         public IActionResult ValidateResourcePermission([FromBody] ResourcePermissionValidationModel model)
         {
-            var userId = User.GetId();
+            var userId = model.UserId;
             var result = _permissionsService.Validate(model, userId);
             if (result.Succeed) return Ok();
             return StatusCode(401);
