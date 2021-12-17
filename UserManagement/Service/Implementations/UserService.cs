@@ -1448,7 +1448,7 @@ namespace Service.Implementations
         }
         public async Task<List<UserCacheModel>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync("UserInformationCacheKey", async () =>
+            var model = await _cache.GetOrAddAsync(CacheConstants.USER, async () =>
             {
                 var result = await _dbContext.Users.Find(x => true).Project(
                     x => new UserCacheModel
@@ -1465,6 +1465,6 @@ namespace Service.Implementations
             }, new TimeSpan(12, 0, 0));
             return model;
         }
-        public void ClearCache() => _cache.Remove("UserInformationCacheKey");
+        public void ClearCache() => _cache.Remove(CacheConstants.USER);
     }
 }
