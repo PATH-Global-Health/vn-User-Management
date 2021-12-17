@@ -201,7 +201,7 @@ namespace Service.Implementations
         }
         public async Task<List<Role>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync("RoleCacheKey", async () =>
+            var model = await _cache.GetOrAddAsync(CacheConstants.ROLE, async () =>
             {
                 var result = await _dbContext.Roles.Find(x => true).Project(
                     x => new Role
@@ -214,6 +214,6 @@ namespace Service.Implementations
             }, new TimeSpan(12, 0, 0));
             return model;
         }
-        public void ClearCache() => _cache.Remove("RoleCacheKey");
+        public void ClearCache() => _cache.Remove(CacheConstants.ROLE);
     }
 }

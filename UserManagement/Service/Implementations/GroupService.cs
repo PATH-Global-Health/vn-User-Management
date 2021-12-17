@@ -67,7 +67,7 @@ namespace Service.Implementations
             result.Data = newGroup.Id;
 
             ClearCache();
-                return result;
+            return result;
         }
         public ResultModel Update(string groupId, GroupUpdateModel model)
         {
@@ -172,6 +172,7 @@ namespace Service.Implementations
                 result.Succeed = false;
                 result.ErrorMessage = e.Message;
             }
+            ClearCache();
             return result;
         }
         public ResultModel RemoveUser(string groupId, string userId)
@@ -194,6 +195,7 @@ namespace Service.Implementations
                 result.Succeed = false;
                 result.ErrorMessage = e.Message;
             }
+            ClearCache();
             return result;
         }
         public ResultModel AddRoles(string groupId, List<string> roleIds)
@@ -290,7 +292,7 @@ namespace Service.Implementations
 
         public async Task<List<Group>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync("GroupCacheKey", async () =>
+            var model = await _cache.GetOrAddAsync(CacheConstants.GROUP, async () =>
             {
                 var result = await _dbContext.Groups.Find(x => true).Project(
                     x => new Group
@@ -303,6 +305,10 @@ namespace Service.Implementations
             }, new TimeSpan(12, 0, 0));
             return model;
         }
-        public void ClearCache() => _cache.Remove("GroupCacheKey");
+        public void ClearCache()
+        {
+            _cache.Remove(CacheConstants.USER);
+            _cache.Remove(CacheConstants.GROUP);
+        }
     }
 }

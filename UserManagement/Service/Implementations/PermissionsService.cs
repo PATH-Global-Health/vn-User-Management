@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.Constants;
 using Data.DataAccess;
 using Data.Enums;
 using Data.MongoCollections;
@@ -1499,12 +1500,18 @@ namespace Service.Implementations
         }
         public async Task<List<ResourcePermission>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync("ResourcePermissionCacheKey", async () =>
+            var model = await _cache.GetOrAddAsync(CacheConstants.RESOURCE_PERMISSION, async () =>
             {
                 return await _dbContext.ResourcePermissions.Find(x => true).ToListAsync();
             }, new TimeSpan(12, 0, 0));
             return model;
         }
-        public void ClearCache() => _cache.Remove("ResourcePermissionCacheKey");
+        public void ClearCache()
+        {
+            _cache.Remove(CacheConstants.USER);
+            _cache.Remove(CacheConstants.ROLE);
+            _cache.Remove(CacheConstants.GROUP);
+            _cache.Remove(CacheConstants.RESOURCE_PERMISSION);
+        }
     }
 }
