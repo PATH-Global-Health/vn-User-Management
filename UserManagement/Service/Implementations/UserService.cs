@@ -425,16 +425,6 @@ namespace Service.Implementations
                     }
                 }
 
-                if (string.IsNullOrEmpty(user.HashedCredential))
-                {
-                    var passwordHasher = new PasswordHasher<UserInformation>();
-
-                    var credential = $"{user.NormalizedUsername}.{user.HashedPassword}";
-                    user.HashedCredential = passwordHasher.HashPassword(user, credential);
-
-                    _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
-                }
-
                 var accessToken = GetAccessToken(user, model.PermissionQuery);
 
                 //if (user.DidFirstTimeLogIn == null || user.DidFirstTimeLogIn == false)
@@ -490,6 +480,16 @@ namespace Service.Implementations
 
         private Token GetAccessToken(UserInformation user, PermissionQuery permissionQuery = null)
         {
+            if (string.IsNullOrEmpty(user.HashedCredential))
+            {
+                var passwordHasher = new PasswordHasher<UserInformation>();
+
+                var credential = $"{user.NormalizedUsername}.{user.HashedPassword}";
+                user.HashedCredential = passwordHasher.HashPassword(user, credential);
+
+                _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
+            }
+
             List<Claim> claims = GetClaims(user);
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
