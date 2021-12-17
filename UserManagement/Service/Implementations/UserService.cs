@@ -1458,6 +1458,7 @@ namespace Service.Implementations
                         GroupIds = x.GroupIds,
                         ResourcePermissionIds = x.ResourcePermissionIds,
                         RoleIds = x.RoleIds,
+                        NormalizedUsername = x.NormalizedUsername
                     }
                     ).ToListAsync();
                 return result;
