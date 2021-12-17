@@ -434,7 +434,6 @@ namespace Service.Implementations
 
                 result.Data = accessToken;
                 result.Succeed = true;
-                ClearCache();
             }
             catch (Exception e)
             {
@@ -489,6 +488,8 @@ namespace Service.Implementations
 
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
             }
+
+            ClearCache();
 
             List<Claim> claims = GetClaims(user);
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -1446,12 +1447,12 @@ namespace Service.Implementations
             }
             return result;
         }
-        public async Task<List<UserCacheModel>> GetFromCache()
+        public async Task<List<UserInformation>> GetFromCache()
         {
             var model = await _cache.GetOrAddAsync(CacheConstants.USER, async () =>
             {
                 var result = await _dbContext.Users.Find(x => true).Project(
-                    x => new UserCacheModel
+                    x => new UserInformation
                     {
                         Id = x.Id,
                         HashedCredential = x.HashedCredential,
@@ -1462,7 +1463,7 @@ namespace Service.Implementations
                     }
                     ).ToListAsync();
                 return result;
-            }, new TimeSpan(12, 0, 0));
+            });
             return model;
         }
         public void ClearCache() => _cache.Remove(CacheConstants.USER);

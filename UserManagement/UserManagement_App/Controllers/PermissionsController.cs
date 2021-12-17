@@ -67,8 +67,7 @@ namespace UserManagement_App.Controllers
         {
             var userId = model.UserId;
             var result = _permissionsService.Validate(model, userId);
-            if (result.Succeed) return Ok();
-            return StatusCode(401);
+            return Ok(result);
         }
 
         //[HttpGet("Resource/Success")]

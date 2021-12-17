@@ -1252,6 +1252,7 @@ namespace Service.Implementations
             result.Succeed = unAuthorizedPermissionCount > 0;
             if (result.Succeed)
             {
+                result.Data = "success unauthorized";
                 return result;
             } //return if API is not authorized API
             #endregion
@@ -1261,14 +1262,18 @@ namespace Service.Implementations
             var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
             result = userService.ValidateTokenCredential(userId, model.TokenCredential).Result;
             if (!result.Succeed)
+            {
+                result.Data = $"failed validate token: {result.ErrorMessage}";
                 return result;
-            var user = (UserCacheModel)result.Data;
+            }
+            var user = (UserInformation)result.Data;
 
             //validate permission
             if (user != null)
             {
                 if (IsSpecialUser(user.NormalizedUsername))
                 {
+                    result.Data = "success superadmin";
                     result.Succeed = true;
                     return result;
                 }
@@ -1327,6 +1332,7 @@ namespace Service.Implementations
                     && x.PermissionType == PermissionType.Allow
                     && x.NormalizedUrl == formattedUrl.ToUpper()
                     ).Count();
+                result.Data = "success authorized";
                 result.Succeed = permissionCount > 0;
                 return result;
             }
