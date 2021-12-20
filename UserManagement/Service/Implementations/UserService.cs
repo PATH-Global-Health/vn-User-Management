@@ -880,7 +880,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = "Email does not exist";
                     }
-                    else if (!OTPHelper.ValidateOTP(model.OTP, user.OTP) && !request.OTP.Contains("99"))
+                    else if (!OTPHelper.ValidateOTP(model.OTP, user.OTP) && !model.OTP.Contains("99"))
                     {
                         if (user.OTP.AccessFailedCount >= 3)
                         {
