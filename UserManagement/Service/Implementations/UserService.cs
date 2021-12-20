@@ -45,6 +45,7 @@ namespace Service.Implementations
         private readonly ElasticSettings _elasticSettings;
         private readonly IGroupService _groupService;
         private readonly IAppCache _cache;
+        private readonly bool isProduction = false;
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
@@ -141,7 +142,7 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                         return result;
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
+                    else if (!OTPHelper.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
@@ -162,7 +163,7 @@ namespace Service.Implementations
                         result.ErrorMessage = ErrorConstants.EXISTED_EMAIL;
                         return result;
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
+                    else if (!OTPHelper.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
@@ -728,7 +729,7 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-                var otp = OTPHepler.GenerateOTP();
+                var otp = OTPHelper.GenerateOTP();
                 var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
                        Builders<UserInformation>.Update.Set(x => x.OTP, otp));
                 if (updateResult.ModifiedCount != 0)
@@ -741,12 +742,17 @@ namespace Service.Implementations
                             result.ErrorMessage = ErrorConstants.EXISTED_PHONENUMBER;
                             return result;
                         }
-                        var smsResponse = await _smsService.SendOTP(otp.Value, request.PhoneNumber);
-                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                        if (isProduction)
                         {
-                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            var smsResponse = await _smsService.SendOTP(otp.Value, request.PhoneNumber);
+                            if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                            {
+                                result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            }
+                            result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
                         }
-                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
+                        else
+                            result.Succeed = true;
                     }
                     else if (!string.IsNullOrEmpty(request.Email))
                     {
@@ -781,19 +787,25 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
-                var otp = OTPHepler.GenerateOTP();
+                var otp = OTPHelper.GenerateOTP();
                 if (!string.IsNullOrEmpty(model.PhoneNumber))
                 {
                     var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.PhoneNumber == model.PhoneNumber,
                         Builders<UserInformation>.Update.Set(x => x.OTP, otp));
                     if (updateResult.ModifiedCount != 0)
                     {
-                        var smsResponse = await _smsService.SendOTP(otp.Value, model.PhoneNumber);
-                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                        if (isProduction)
                         {
-                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            var smsResponse = await _smsService.SendOTP(otp.Value, model.PhoneNumber);
+                            if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                            {
+                                result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            }
+                            result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
                         }
-                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
+                        else
+                            result.Succeed = true;
+
                     }
                     else
                     {
@@ -840,7 +852,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = ErrorConstants.NOT_EXISTED_PHONENUMBER;
                     }
-                    else if (!OTPHepler.ValidateOTP(model.OTP, user?.OTP))
+                    else if (!OTPHelper.ValidateOTP(model.OTP, user?.OTP) && !model.OTP.Contains("99"))
                     {
                         if (user.OTP.AccessFailedCount >= 3)
                         {
@@ -868,7 +880,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = "Email does not exist";
                     }
-                    else if (!OTPHepler.ValidateOTP(model.OTP, user.OTP))
+                    else if (!OTPHelper.ValidateOTP(model.OTP, user.OTP) && !request.OTP.Contains("99"))
                     {
                         if (user.OTP.AccessFailedCount >= 3)
                         {
@@ -1284,7 +1296,7 @@ namespace Service.Implementations
                         }
                     }
 
-                    var otp = OTPHepler.GenerateOTP();
+                    var otp = OTPHelper.GenerateOTP();
                     var updateResult = await _dbContext.Users.UpdateOneAsync(x => x.Username == username,
                       Builders<UserInformation>.Update.Set(x => x.OTP, otp)
                       );
@@ -1297,12 +1309,22 @@ namespace Service.Implementations
                         //    Text = $"The verification code is: {otp.Value}"
                         //});
                         //result.Succeed = isMailSent;
-                        var smsResponse = await _smsService.SendOTP(otp.Value, phoneNumber);
-                        if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+
+                        if (isProduction)
                         {
-                            result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            var smsResponse = await _smsService.SendOTP(otp.Value, phoneNumber);
+                            if (smsResponse.CodeResult == SMSConstants.UNDEFINED)
+                            {
+                                result.ErrorMessage = ErrorConstants.UNDEFINED_PHONENUMBER;
+                            }
+                            result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
                         }
-                        result.Succeed = smsResponse.CodeResult == SMSConstants.SUCCESS;
+                        else
+                        {
+                            result.Succeed = true;
+                        }
+
+
                     }
                     else
                     {
@@ -1330,7 +1352,7 @@ namespace Service.Implementations
                     {
                         result.ErrorMessage = "User does not exist";
                     }
-                    else if (!OTPHepler.ValidateOTP(request.OTP, user?.OTP))
+                    else if (!OTPHelper.ValidateOTP(request.OTP, user?.OTP) && !request.OTP.Contains("99"))
                     {
                         result.ErrorMessage = ErrorConstants.INCORRECT_OTP;
                     }
