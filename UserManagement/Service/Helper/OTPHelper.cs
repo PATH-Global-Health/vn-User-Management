@@ -3,7 +3,7 @@ using System;
 
 namespace Service.Helper
 {
-    public static class OTPHepler
+    public static class OTPHelper
     {
         public static OTP GenerateOTP()
         {
