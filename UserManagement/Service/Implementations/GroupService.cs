@@ -4,7 +4,9 @@ using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
 using LazyCache;
+using Microsoft.Extensions.Caching.Distributed;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,12 +20,15 @@ namespace Service.Implementations
         private readonly ApplicationDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly IAppCache _cache;
+        private readonly IDistributedCache _distributedCache;
 
-        public GroupService(ApplicationDbContext context, IMapper mapper, IAppCache cache)
+        public GroupService(ApplicationDbContext context, IMapper mapper, IAppCache cache,
+            IDistributedCache distributedCache)
         {
             _dbContext = context;
             _mapper = mapper;
             _cache = cache;
+            _distributedCache = distributedCache;
         }
 
         public ICollection<GroupOverviewModel> GetAll()
@@ -292,23 +297,29 @@ namespace Service.Implementations
 
         public async Task<List<Group>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync(CacheConstants.GROUP, async () =>
+            var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.GROUP);
+            if (cacheContent != null)
             {
-                var result = await _dbContext.Groups.Find(x => true).Project(
+                return JsonConvert.DeserializeObject<List<Group>>(cacheContent);
+            }
+            else
+            {
+                var model = await _dbContext.Groups.Find(x => true).Project(
                     x => new Group
                     {
                         Id = x.Id,
                         ResourcePermissionIds = x.ResourcePermissionIds,
                     }
                     ).ToListAsync();
-                return result;
-            }, new TimeSpan(12, 0, 0));
-            return model;
+                var content = JsonConvert.SerializeObject(model);
+                await _distributedCache.SetStringAsync(CacheConstants.GROUP, content);
+                return model;
+            }
         }
         public void ClearCache()
         {
-            _cache.Remove(CacheConstants.USER);
-            _cache.Remove(CacheConstants.GROUP);
+            _distributedCache.Remove(CacheConstants.USER);
+            _distributedCache.Remove(CacheConstants.GROUP);
         }
     }
 }

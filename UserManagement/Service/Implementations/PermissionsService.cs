@@ -6,9 +6,11 @@ using Data.MongoCollections;
 using Data.ViewModels;
 using Data.ViewModels.Users;
 using LazyCache;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using MoreLinq;
+using Newtonsoft.Json;
 using Service.Interfaces;
 using System;
 using System.Collections.Concurrent;
@@ -26,18 +28,20 @@ namespace Service.Implementations
         private readonly IMapper _mapper;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IAppCache _cache;
+        private readonly IDistributedCache _distributedCache;
 
         #region Special Roles
         private const string SUPER_ADMIN_ROLE = "LONGHDT";
         #endregion
 
         public PermissionsService(ApplicationDbContext dbContext, IMapper mapper,
-            IServiceScopeFactory scopeFactory, IAppCache cache)
+            IServiceScopeFactory scopeFactory, IAppCache cache, IDistributedCache distributedCache)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _scopeFactory = scopeFactory;
             _cache = cache;
+            _distributedCache = distributedCache;
         }
 
         #region Resource Permission
@@ -1506,18 +1510,28 @@ namespace Service.Implementations
         }
         public async Task<List<ResourcePermission>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync(CacheConstants.RESOURCE_PERMISSION, async () =>
+            var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.RESOURCE_PERMISSION);
+            if (cacheContent != null)
             {
-                return await _dbContext.ResourcePermissions.Find(x => true).ToListAsync();
-            }, new TimeSpan(12, 0, 0));
-            return model;
+                return JsonConvert.DeserializeObject<List<ResourcePermission>>(cacheContent);
+            }
+            else
+            {
+                var model = await _dbContext.ResourcePermissions.Find(x => true).ToListAsync();
+                var content = JsonConvert.SerializeObject(model);
+                //var options = new DistributedCacheEntryOptions()
+                //    .SetAbsoluteExpiration(DateTime.Now.AddHours(24))
+                //    .SetSlidingExpiration(TimeSpan.FromHours(6));
+                await _distributedCache.SetStringAsync(CacheConstants.RESOURCE_PERMISSION, content);
+                return model;
+            }
         }
         public void ClearCache()
         {
-            _cache.Remove(CacheConstants.USER);
-            _cache.Remove(CacheConstants.ROLE);
-            _cache.Remove(CacheConstants.GROUP);
-            _cache.Remove(CacheConstants.RESOURCE_PERMISSION);
+            _distributedCache.RemoveAsync(CacheConstants.RESOURCE_PERMISSION);
+            _distributedCache.RemoveAsync(CacheConstants.USER);
+            _distributedCache.RemoveAsync(CacheConstants.ROLE);
+            _distributedCache.RemoveAsync(CacheConstants.GROUP);
         }
     }
 }

@@ -9,6 +9,7 @@ using Data.ViewModels.Users;
 using Flurl.Http;
 using LazyCache;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -46,11 +47,13 @@ namespace Service.Implementations
         private readonly IGroupService _groupService;
         private readonly IAppCache _cache;
         private readonly bool isProduction = false;
+        private readonly IDistributedCache _distributedCache;
+
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
                 ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings,
-                IGroupService groupService, IAppCache cache)
+                IGroupService groupService, IAppCache cache, IDistributedCache distributedCache)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -64,6 +67,7 @@ namespace Service.Implementations
             _elasticSettings = elasticSettings;
             _groupService = groupService;
             _cache = cache;
+            _distributedCache = distributedCache;
         }
 
         public async Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId)
@@ -1471,9 +1475,15 @@ namespace Service.Implementations
         }
         public async Task<List<UserInformation>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync(CacheConstants.USER, async () =>
+            var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.USER);
+            if (cacheContent != null)
             {
-                var result = await _dbContext.Users.Find(x => true).Project(
+                return JsonConvert.DeserializeObject<List<UserInformation>>(cacheContent);
+            }
+            else
+            {
+                var model = await _dbContext.Users.Find(x => true)
+                    .Project(
                     x => new UserInformation
                     {
                         Id = x.Id,
@@ -1482,12 +1492,13 @@ namespace Service.Implementations
                         ResourcePermissionIds = x.ResourcePermissionIds,
                         RoleIds = x.RoleIds,
                         NormalizedUsername = x.NormalizedUsername
-                    }
-                    ).ToListAsync();
-                return result;
-            });
-            return model;
+                    })
+                    .ToListAsync();
+                var content = JsonConvert.SerializeObject(model);
+                await _distributedCache.SetStringAsync(CacheConstants.USER, content);
+                return model;
+            }
         }
-        public void ClearCache() => _cache.Remove(CacheConstants.USER);
+        public void ClearCache() => _distributedCache.Remove(CacheConstants.USER);
     }
 }

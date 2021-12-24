@@ -4,7 +4,9 @@ using Data.DataAccess;
 using Data.MongoCollections;
 using Data.ViewModels;
 using LazyCache;
+using Microsoft.Extensions.Caching.Distributed;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,12 +20,14 @@ namespace Service.Implementations
         private readonly IMapper _mapper;
         private readonly ApplicationDbContext _dbContext;
         private readonly IAppCache _cache;
+        private readonly IDistributedCache _distributedCache;
 
-        public RoleService(IMapper mapper, ApplicationDbContext dbContext, IAppCache cache)
+        public RoleService(IMapper mapper, ApplicationDbContext dbContext, IAppCache cache, IDistributedCache distributedCache)
         {
             _mapper = mapper;
             _dbContext = dbContext;
             _cache = cache;
+            _distributedCache = distributedCache;
         }
 
         public ResultModel AddUsers(string roleId, List<string> userIds)
@@ -201,19 +205,25 @@ namespace Service.Implementations
         }
         public async Task<List<Role>> GetFromCache()
         {
-            var model = await _cache.GetOrAddAsync(CacheConstants.ROLE, async () =>
+            var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.ROLE);
+            if (cacheContent != null)
             {
-                var result = await _dbContext.Roles.Find(x => true).Project(
+                return JsonConvert.DeserializeObject<List<Role>>(cacheContent);
+            }
+            else
+            {
+                var model = await _dbContext.Roles.Find(x => true).Project(
                     x => new Role
                     {
                         Id = x.Id,
                         ResourcePermissionIds = x.ResourcePermissionIds,
                     }
                     ).ToListAsync();
-                return result;
-            }, new TimeSpan(12, 0, 0));
-            return model;
+                var content = JsonConvert.SerializeObject(model);
+                await _distributedCache.SetStringAsync(CacheConstants.ROLE, content);
+                return model;
+            }
         }
-        public void ClearCache() => _cache.Remove(CacheConstants.ROLE);
+        public void ClearCache() => _distributedCache.Remove(CacheConstants.ROLE);
     }
 }

@@ -38,6 +38,7 @@ namespace UserManagement_App
             services.AddLogging();
             services.AddHttpClient();
             services.AddLazyCache();
+            services.ConfigRedis(Configuration);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext)

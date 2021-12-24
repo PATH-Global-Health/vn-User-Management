@@ -3,6 +3,7 @@ using Data.ViewModels;
 using Data.ViewModels.ElasticSearchs;
 using Data.ViewModels.FacebookAuths;
 using Data.ViewModels.GoogleAuths;
+using Data.ViewModels.RedisSettings;
 using Data.ViewModels.SMSs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -142,6 +143,16 @@ namespace UserManagement_App.Extensions
             services.AddSingleton<IMongoClient>(s => new MongoClient(connectionString));
             services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(), dbName));
         }
-
+        public static void ConfigRedis(this IServiceCollection services, IConfiguration configuration)
+        {
+            var redisSettings = new RedisSettings();
+            configuration.Bind(nameof(RedisSettings), redisSettings);
+            services.AddSingleton(redisSettings);
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisSettings.ConnectionString;
+                options.InstanceName = redisSettings.InstanceName;
+            });
+        }
     }
 }
