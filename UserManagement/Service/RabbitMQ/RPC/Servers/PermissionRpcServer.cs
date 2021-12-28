@@ -58,7 +58,7 @@ namespace Service.RabbitMQ.RPC.Servers
                 {
                     var jsonMessage = Encoding.UTF8.GetString(body);
 
-                    Console.WriteLine("From check permission: " + jsonMessage);
+                    //Console.WriteLine("From check permission: " + jsonMessage);
                     var messageObject = JsonConvert.DeserializeObject<PermissionCheckMessageModel>(jsonMessage);
 
                     var validationResult = CheckPermission(messageObject);

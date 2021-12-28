@@ -124,14 +124,14 @@ namespace UserManagement_App.Extensions
                     {
                         OnAuthenticationFailed = context =>
                         {
-                            Console.WriteLine("OnAuthenticationFailed: " +
-                                context.Exception.Message);
+                            //Console.WriteLine("OnAuthenticationFailed: " +
+                            //    context.Exception.Message);
                             return Task.CompletedTask;
                         },
                         OnTokenValidated = context =>
                         {
-                            Console.WriteLine("OnTokenValidated: " +
-                                context.SecurityToken);
+                            //Console.WriteLine("OnTokenValidated: " +
+                            //    context.SecurityToken);
                             return Task.CompletedTask;
                         },
                     };
