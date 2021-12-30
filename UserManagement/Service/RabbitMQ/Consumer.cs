@@ -22,7 +22,7 @@ namespace Service.RabbitMQ
         private EventingBasicConsumer consumer;
         private readonly IConfiguration _configuration;
         private readonly ILogger<Consumer> _logger;
-        string queue = "queue4";
+        string queue = "CreateAccountDev1";
         public Consumer(IServiceScopeFactory scopeFactory, IConfiguration configuration, ILogger<Consumer> logger)
         {
             _scopeFactory = scopeFactory;
