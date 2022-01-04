@@ -1531,6 +1531,25 @@ namespace Service.Implementations
                         user.UiPermissionIds.Add(firstUiPermissionId);
                         _dbContext.Users.ReplaceOne(x => x.Id == user.Id, user);
                     });
+
+                    var groupFilter = Builders<Group>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var groups = await _dbContext.Groups.Find(groupFilter).ToListAsync();
+                    Parallel.ForEach(groups, group =>
+                    {
+                        group.UiPermissionIds.Remove(id);
+                        group.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Groups.ReplaceOne(x => x.Id == group.Id, group);
+                    });
+
+                    var roleFilter = Builders<Role>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var roles = await _dbContext.Roles.Find(roleFilter).ToListAsync();
+                    Parallel.ForEach(roles, role =>
+                    {
+                        role.UiPermissionIds.Remove(id);
+                        role.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Roles.ReplaceOne(x => x.Id == role.Id, role);
+                    });
+
                     await _dbContext.UiPermissions.DeleteOneAsync(x => x.Id == id);
                 }
             }
