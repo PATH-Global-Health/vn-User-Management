@@ -1508,6 +1508,34 @@ namespace Service.Implementations
             ClearCache();
             return "success";
         }
+        public async Task<string> MergeDuplicateUIPermission()
+        {
+            var uiPermissionGroups = _dbContext.UiPermissions.Aggregate()
+                            .Group(e => e.Name, g => new { Key = g.Key, Data = g.Select(x => x.Id).ToList() })
+                            .ToList();
+            uiPermissionGroups.RemoveAll(x => x.Data.Count == 1);
+
+            foreach (var uiPermissionGroup in uiPermissionGroups)
+            {
+                var firstUiPermissionId = uiPermissionGroup.Data.FirstOrDefault();
+
+                uiPermissionGroup.Data.Remove(firstUiPermissionId);
+
+                foreach (var id in uiPermissionGroup.Data)
+                {
+                    var userFilter = Builders<UserInformation>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var users = await _dbContext.Users.Find(userFilter).ToListAsync();
+                    Parallel.ForEach(users, user =>
+                    {
+                        user.UiPermissionIds.Remove(id);
+                        user.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Users.ReplaceOne(x => x.Id == user.Id, user);
+                    });
+                    await _dbContext.UiPermissions.DeleteOneAsync(x => x.Id == id);
+                }
+            }
+            return "success";
+        }
         public async Task<List<ResourcePermission>> GetFromCache()
         {
             var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.RESOURCE_PERMISSION);
