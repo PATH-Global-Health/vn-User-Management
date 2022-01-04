@@ -374,5 +374,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
+        [AllowAnonymous]
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+        {
+            var result = await _userService.ForgotPassword(model);
+            if (result.Succeed) return Ok();
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }

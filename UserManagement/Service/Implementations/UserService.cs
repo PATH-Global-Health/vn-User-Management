@@ -1499,6 +1499,92 @@ namespace Service.Implementations
                 return model;
             }
         }
+
+        public async Task<ResultModel> ForgotPassword(ForgotPasswordModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                //check existed user
+
+                var isExistedUser = await _dbContext.Users
+                    .Find(x => x.Email == model.Email && x.Username == model.Username).FirstOrDefaultAsync();
+                if (isExistedUser == null)
+                {
+                    throw new Exception(ErrorConstants.NOT_EXIST_ACCOUNT);
+                }
+
+                //check user send mail
+
+                var baseKey = "ForgotPassword-"+isExistedUser.Username;
+
+                string tokenUser = "";
+                tokenUser = await GetCache<string>(baseKey);
+                if(tokenUser!=null)
+                {
+                    throw new Exception(ErrorConstants.SENT_EMAIL_FORGOT_PASSWORD);
+                }
+
+
+                var token = GenerateTokenForgotPassword();
+                SetCache(baseKey, token, 5,5);
+                SetCache(token, isExistedUser.Username, 5, 5);
+
+                var isMailSent = await _mailService.SendEmail(new EmailViewModel()
+                {
+                    To = model.Email,
+                    Subject = $"Forgot password USAID",
+                    Text = $"Click to change password: LINK/{token}"
+                });
+
+                result.Succeed = isMailSent;
+                result.Data = model.Email;
+
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
+
         public void ClearCache() => _distributedCache.Remove(CacheConstants.USER);
+
+
+        public async Task<T> GetCache<T>(string key)
+        {
+
+            var value = await _distributedCache.GetAsync(key);
+            if (value != null)
+            {
+                var dataSerialized = Encoding.UTF8.GetString(value);
+                var data = JsonConvert.DeserializeObject<T>(dataSerialized);
+                return data;
+            }
+            return default(T);
+        }
+
+        public async void SetCache<T>(string key, T data,int absoluteExpirationMinutes,int etSlidingExpirationMinutes)
+        {
+            var dataSerialize = JsonConvert.SerializeObject(data);
+            var dataToRedis = Encoding.UTF8.GetBytes(dataSerialize);
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(DateTime.Now.AddMinutes(absoluteExpirationMinutes))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(etSlidingExpirationMinutes));
+            await _distributedCache.SetAsync(key, dataToRedis, options);
+        }
+
+
+        public  string GenerateTokenForgotPassword()
+        {
+            string token = "";
+
+            for (int i = 0; i < 5; i++)
+            {
+                token += Guid.NewGuid().ToString();
+            }
+            return token;
+        }
     }
 }
