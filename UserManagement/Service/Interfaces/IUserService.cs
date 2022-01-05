@@ -52,5 +52,6 @@ namespace Service.Interfaces
 
         Task<ResultModel> SetUserPassword(SetUserPasswordModel model);
         void ClearCache();
+        Task<ResultModel> CreateAccountCBO(CBOCreateModel model);
     }
 }

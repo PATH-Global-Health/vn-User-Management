@@ -123,4 +123,9 @@ namespace Data.ViewModels
         public string Phone { get; set; }
         public bool IsDelete { get; set; }
     }
+
+    public class CBOCreateModel:UserCreateModel
+    {
+        public bool HasSendInitialEmail { get; set; }
+    }
 }

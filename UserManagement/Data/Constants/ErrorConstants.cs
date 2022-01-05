@@ -25,5 +25,6 @@ namespace Data.Constants
         public const string UNDEFINED_PHONENUMBER = "UNDEFINED_PHONENUMBER";
         public const string IS_CONFIRMED = "IS_CONFIRMED";
         public const string SENT_EMAIL_FORGOT_PASSWORD = "SENT_EMAIL_FORGOT_PASSWORD";
+        public const string EMAIL_IS_NULL = "EMAIL_IS_NULL";
     }
 }

@@ -389,5 +389,21 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
+
+        [AllowAnonymous]
+        [HttpPost("CreateAccountCBO")]
+        public async Task<IActionResult> CreateAccountCBO([FromBody] CBOCreateModel model)
+        {
+            if (!ModelState.IsValid
+                || (!string.IsNullOrEmpty(model.PhoneNumber) && !StringHelper.IsPhoneNumber(model.PhoneNumber))
+                || (!string.IsNullOrEmpty(model.Email) && !StringHelper.IsValidEmail(model.Email)))
+            {
+                return BadRequest();
+            }
+
+            var result = await _userService.CreateAccountCBO(model);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
     }
 }

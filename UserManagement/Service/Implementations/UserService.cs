@@ -1679,5 +1679,42 @@ namespace Service.Implementations
             }
             return result;
         }
+
+
+        public async Task<ResultModel> CreateAccountCBO(CBOCreateModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                var rs = await Create(model);
+                if (!rs.Succeed)
+                {
+                    return rs;
+                }
+
+                if (model.HasSendInitialEmail)
+                {
+                    if (string.IsNullOrEmpty(model.Email))
+                    {
+                        throw new Exception(ErrorConstants.EMAIL_IS_NULL);
+                    }
+                    var forgotPasswordModel = new ForgotPasswordModel
+                    {
+                        Username = model.Username,
+                        Email = model.Email
+                    };
+                    await ForgotPassword(forgotPasswordModel);
+                }
+
+                result.Succeed = true;
+                result.Data = "OK";
+
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
     }
 }
