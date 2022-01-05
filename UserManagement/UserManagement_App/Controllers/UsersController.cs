@@ -377,8 +377,15 @@ namespace UserManagement_App.Controllers
         [AllowAnonymous]
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+        { 
+           await _userService.ForgotPassword(model);
+           return Ok();
+        }
+        [AllowAnonymous]
+        [HttpPut("SetNewPassword")]
+        public async Task<IActionResult> ChangePassword(SetUserPasswordModel model)
         {
-            var result = await _userService.ForgotPassword(model);
+            var result =await _userService.SetUserPassword(model);
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }

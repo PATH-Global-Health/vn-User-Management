@@ -49,6 +49,8 @@ namespace Service.Interfaces
         Task<ResultModel> LogOut(string username);
 
         Task<ResultModel> ForgotPassword(ForgotPasswordModel model);
+
+        Task<ResultModel> SetUserPassword(SetUserPasswordModel model);
         void ClearCache();
     }
 }

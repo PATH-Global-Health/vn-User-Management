@@ -1528,13 +1528,13 @@ namespace Service.Implementations
 
                 var token = GenerateTokenForgotPassword();
                 SetCache(baseKey, token, 5,5);
-                SetCache(token, isExistedUser.Username, 5, 5);
+                SetCache(token, isExistedUser.Id, 5, 5);
 
                 var isMailSent = await _mailService.SendEmail(new EmailViewModel()
                 {
                     To = model.Email,
                     Subject = $"Forgot password USAID",
-                    Text = $"Click to change password: LINK/{token}"
+                    Text = $"Click to change password: LINK?token={token}"
                 });
 
                 result.Succeed = isMailSent;
@@ -1547,6 +1547,37 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<ResultModel> SetUserPassword(SetUserPasswordModel model)
+        {
+            var result = new ResultModel();
+            try
+            {
+                string userid = await GetCache<string>(model.Token);
+                if (userid == null)
+                {
+                    throw new Exception(ErrorConstants.SENT_EMAIL_FORGOT_PASSWORD);
+                }
+
+                var user = _dbContext.Users.Find(x => x.Id == userid).FirstOrDefault();
+                var changePasswordModel = new ChangePasswordModel
+                {
+                    NewPassword = model.Password,
+                };
+
+                result = await ChangePasswordAsync2(changePasswordModel, userid);
+                _distributedCache.Remove(model.Token);
+
+                var baseKey = "ForgotPassword-" + user.Username;
+                _distributedCache.Remove(baseKey);
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
+        }
+
 
 
         public void ClearCache() => _distributedCache.Remove(CacheConstants.USER);
@@ -1584,7 +1615,50 @@ namespace Service.Implementations
             {
                 token += Guid.NewGuid().ToString();
             }
-            return token;
+            return token.Replace("-","");
+        }
+
+
+        public async Task<ResultModel> ChangePasswordAsync2(ChangePasswordModel model, string userId)
+        {
+            var result = new ResultModel();
+            try
+            {
+                if (string.IsNullOrEmpty(model.NewPassword))
+                {
+                    result.ErrorMessage = ErrorConstants.NULL_PASSWORD;
+                    return result;
+                }
+                var user = _dbContext.Users.Find(i => i.Id == userId).FirstOrDefault();
+                if (user == null)
+                {
+                    result.ErrorMessage = "Invalid Login Token";
+                    return result;
+                }
+                var passwordHasher = new PasswordHasher<UserInformation>();
+                user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
+                user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
+                user.DidFirstTimeLogIn = true;
+                if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
+                {
+                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email, true);
+                    if (!response.Succeed)
+                    {
+                        result.ErrorMessage = "Update elastic password failed";
+                        return result;
+                    }
+                }
+                _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
+
+                result.Data = GetAccessToken(user);
+                result.Succeed = true;
+                ClearCache();
+            }
+            catch (Exception e)
+            {
+                result.ErrorMessage = e.InnerException != null ? e.InnerException.Message : e.Message;
+            }
+            return result;
         }
     }
 }
