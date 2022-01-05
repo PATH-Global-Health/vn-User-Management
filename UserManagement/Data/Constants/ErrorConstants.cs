@@ -24,5 +24,6 @@ namespace Data.Constants
         public const string OVER_FAILED_TIMES_OTP = "OVER_FAILED_TIMES_OTP";
         public const string UNDEFINED_PHONENUMBER = "UNDEFINED_PHONENUMBER";
         public const string IS_CONFIRMED = "IS_CONFIRMED";
+        public const string SENT_EMAIL_FORGOT_PASSWORD = "SENT_EMAIL_FORGOT_PASSWORD";
     }
 }
