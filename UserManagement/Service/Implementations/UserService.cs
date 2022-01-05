@@ -1530,12 +1530,24 @@ namespace Service.Implementations
                 SetCache(baseKey, token, 5,5);
                 SetCache(token, isExistedUser.Id, 5, 5);
 
+                var urlResetPassword = "https://scd.quanlyhiv.vn/resetpassword?token=";
+                var urlResetPassword2 = "https://scd.quanlyhiv.vn/reset-password?token=";
+
                 var isMailSent = await _mailService.SendEmail(new EmailViewModel()
                 {
                     To = model.Email,
-                    Subject = $"Forgot password USAID",
-                    Text = $"Click to change password: LINK?token={token}"
+                    Subject = $"Set new password USAID",
+                    Text = $"Hi {isExistedUser.Username} \n" +
+                           $"Follow this link to set your password: {urlResetPassword2+token}\n" +
+                           $"================================== \n"+
+                           $"Xin chào {isExistedUser.Username} \n" +
+                           $"Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: {urlResetPassword2+token} \n"
                 });
+
+//                Hi { username},
+//                Follow this link to set your password: { link}
+//                Chào bạn { username},
+//                Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: { link}
 
                 result.Succeed = isMailSent;
                 result.Data = model.Email;
@@ -1566,6 +1578,13 @@ namespace Service.Implementations
                 };
 
                 result = await ChangePasswordAsync2(changePasswordModel, userid);
+
+                if (!user.IsConfirmed)
+                {
+                    user.IsConfirmed = true;
+                    await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
+                }
+
                 _distributedCache.Remove(model.Token);
 
                 var baseKey = "ForgotPassword-" + user.Username;
