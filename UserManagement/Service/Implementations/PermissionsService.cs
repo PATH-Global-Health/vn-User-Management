@@ -1575,10 +1575,10 @@ namespace Service.Implementations
         }
         public void ClearCache()
         {
-            _distributedCache.RemoveAsync(CacheConstants.RESOURCE_PERMISSION);
-            _distributedCache.RemoveAsync(CacheConstants.USER);
-            _distributedCache.RemoveAsync(CacheConstants.ROLE);
-            _distributedCache.RemoveAsync(CacheConstants.GROUP);
+            _distributedCache.Remove(CacheConstants.RESOURCE_PERMISSION);
+            _distributedCache.Remove(CacheConstants.USER);
+            _distributedCache.Remove(CacheConstants.ROLE);
+            _distributedCache.Remove(CacheConstants.GROUP);
         }
     }
 }

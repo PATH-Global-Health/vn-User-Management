@@ -1,9 +1,10 @@
 using AutoMapper;
-
+using Data.Constants;
 using Data.DataAccess;
 using Data.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,7 +42,9 @@ namespace UserManagement_App
             services.ConfigRedis(Configuration);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext mongoDbContext,
+        IDistributedCache _distributedCache
+            )
         {
             if (env.IsDevelopment())
             {
@@ -65,6 +68,12 @@ namespace UserManagement_App
 
             app.UseOpenApi();
             app.UseSwaggerUi3();
+
+            //remove cache
+            _distributedCache.Remove(CacheConstants.RESOURCE_PERMISSION);
+            _distributedCache.Remove(CacheConstants.USER);
+            _distributedCache.Remove(CacheConstants.ROLE);
+            _distributedCache.Remove(CacheConstants.GROUP);
         }
     }
 }
