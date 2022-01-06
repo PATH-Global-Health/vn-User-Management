@@ -1508,6 +1508,53 @@ namespace Service.Implementations
             ClearCache();
             return "success";
         }
+        public async Task<string> MergeDuplicateUIPermission()
+        {
+            var uiPermissionGroups = _dbContext.UiPermissions.Aggregate()
+                            .Group(e => e.Name, g => new { Key = g.Key, Data = g.Select(x => x.Id).ToList() })
+                            .ToList();
+            uiPermissionGroups.RemoveAll(x => x.Data.Count == 1);
+
+            foreach (var uiPermissionGroup in uiPermissionGroups)
+            {
+                var firstUiPermissionId = uiPermissionGroup.Data.FirstOrDefault();
+
+                uiPermissionGroup.Data.Remove(firstUiPermissionId);
+
+                foreach (var id in uiPermissionGroup.Data)
+                {
+                    var userFilter = Builders<UserInformation>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var users = await _dbContext.Users.Find(userFilter).ToListAsync();
+                    Parallel.ForEach(users, user =>
+                    {
+                        user.UiPermissionIds.Remove(id);
+                        user.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Users.ReplaceOne(x => x.Id == user.Id, user);
+                    });
+
+                    var groupFilter = Builders<Group>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var groups = await _dbContext.Groups.Find(groupFilter).ToListAsync();
+                    Parallel.ForEach(groups, group =>
+                    {
+                        group.UiPermissionIds.Remove(id);
+                        group.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Groups.ReplaceOne(x => x.Id == group.Id, group);
+                    });
+
+                    var roleFilter = Builders<Role>.Filter.AnyEq(x => x.UiPermissionIds, id);
+                    var roles = await _dbContext.Roles.Find(roleFilter).ToListAsync();
+                    Parallel.ForEach(roles, role =>
+                    {
+                        role.UiPermissionIds.Remove(id);
+                        role.UiPermissionIds.Add(firstUiPermissionId);
+                        _dbContext.Roles.ReplaceOne(x => x.Id == role.Id, role);
+                    });
+
+                    await _dbContext.UiPermissions.DeleteOneAsync(x => x.Id == id);
+                }
+            }
+            return "success";
+        }
         public async Task<List<ResourcePermission>> GetFromCache()
         {
             var cacheContent = await _distributedCache.GetStringAsync(CacheConstants.RESOURCE_PERMISSION);
@@ -1528,10 +1575,10 @@ namespace Service.Implementations
         }
         public void ClearCache()
         {
-            _distributedCache.RemoveAsync(CacheConstants.RESOURCE_PERMISSION);
-            _distributedCache.RemoveAsync(CacheConstants.USER);
-            _distributedCache.RemoveAsync(CacheConstants.ROLE);
-            _distributedCache.RemoveAsync(CacheConstants.GROUP);
+            _distributedCache.Remove(CacheConstants.RESOURCE_PERMISSION);
+            _distributedCache.Remove(CacheConstants.USER);
+            _distributedCache.Remove(CacheConstants.ROLE);
+            _distributedCache.Remove(CacheConstants.GROUP);
         }
     }
 }

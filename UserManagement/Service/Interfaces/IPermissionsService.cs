@@ -33,5 +33,6 @@ namespace Service.Interfaces
         ResultModel CreatePermissions(List<UiPermissionCreateModel> models);
         ResultModel CreatePermissions(List<ResourcePermissionCreateModel> models);
         Task<string> FixUrlFormat();
+        Task<string> MergeDuplicateUIPermission();
     }
 }

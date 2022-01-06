@@ -164,6 +164,11 @@ namespace UserManagement_App.Controllers
             var result = await _permissionsService.FixUrlFormat();
             return Ok(result);
         }
-
+        [HttpPost("Tools/MergeDuplicateUIPermission")]
+        public async Task<IActionResult> MergeDuplicateUIPermission()
+        {
+            var result = await _permissionsService.MergeDuplicateUIPermission();
+            return Ok(result);
+        }
     }
 }
