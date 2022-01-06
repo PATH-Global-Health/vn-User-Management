@@ -1691,7 +1691,6 @@ namespace Service.Implementations
                 {
                     return rs;
                 }
-
                 if (model.HasSendInitialEmail)
                 {
                     if (string.IsNullOrEmpty(model.Email))
@@ -1705,10 +1704,8 @@ namespace Service.Implementations
                     };
                     await ForgotPassword(forgotPasswordModel);
                 }
-
                 result.Succeed = true;
                 result.Data = "OK";
-
             }
             catch (Exception e)
             {
