@@ -1544,11 +1544,6 @@ namespace Service.Implementations
                            $"Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: {urlResetPassword2+token} \n"
                 });
 
-//                Hi { username},
-//                Follow this link to set your password: { link}
-//                Chào bạn { username},
-//                Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: { link}
-
                 result.Succeed = isMailSent;
                 result.Data = model.Email;
 
@@ -1579,14 +1574,16 @@ namespace Service.Implementations
 
                 result = await ChangePasswordAsync2(changePasswordModel, userid);
 
-                if (!user.IsConfirmed)
+                var finalUser = _dbContext.Users.Find(x => x.Id == userid).FirstOrDefault();
+                if (!finalUser.IsConfirmed)
                 {
-                    user.IsConfirmed = true;
-                    await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, user);
+                    finalUser.IsConfirmed = true;
+                    await _dbContext.Users.ReplaceOneAsync(i => i.Id == user.Id, finalUser);
                 }
 
-                _distributedCache.Remove(model.Token);
 
+
+                _distributedCache.Remove(model.Token);
                 var baseKey = "ForgotPassword-" + user.Username;
                 _distributedCache.Remove(baseKey);
             }
@@ -1657,16 +1654,7 @@ namespace Service.Implementations
                 var passwordHasher = new PasswordHasher<UserInformation>();
                 user.HashedPassword = passwordHasher.HashPassword(user, model.NewPassword);
                 user.HashedCredential = passwordHasher.HashPassword(user, $"{user.NormalizedUsername}.{user.HashedPassword}");
-                user.DidFirstTimeLogIn = true;
-                if (user.IsElasticSynced.HasValue && user.IsElasticSynced.Value)
-                {
-                    var response = await CreateOrUpdateUserElasticSearch(user.FullName, user.Username, model.NewPassword, user.Email, true);
-                    if (!response.Succeed)
-                    {
-                        result.ErrorMessage = "Update elastic password failed";
-                        return result;
-                    }
-                }
+                user.DidFirstTimeLogIn = false;
                 _dbContext.Users.ReplaceOne(i => i.Id == user.Id, user);
 
                 result.Data = GetAccessToken(user);
@@ -1702,7 +1690,11 @@ namespace Service.Implementations
                         Username = model.Username,
                         Email = model.Email
                     };
-                    await ForgotPassword(forgotPasswordModel);
+                    var isSend =await ForgotPassword(forgotPasswordModel);
+                    if (!isSend.Succeed)
+                    {
+                        throw new Exception(ErrorConstants.CAN_NOT_SEND_EMAIL);
+                    }
                 }
                 result.Succeed = true;
                 result.Data = "OK";
