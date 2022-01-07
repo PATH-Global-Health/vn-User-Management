@@ -1674,6 +1674,11 @@ namespace Service.Implementations
             var result = new ResultModel();
             try
             {
+                if (model.HasSendInitialEmail && string.IsNullOrEmpty(model.Email))
+                {
+                    throw new Exception(ErrorConstants.EMAIL_IS_NULL);
+                }
+
                 var rs = await Create(model);
                 if (!rs.Succeed)
                 {
@@ -1681,10 +1686,6 @@ namespace Service.Implementations
                 }
                 if (model.HasSendInitialEmail)
                 {
-                    if (string.IsNullOrEmpty(model.Email))
-                    {
-                        throw new Exception(ErrorConstants.EMAIL_IS_NULL);
-                    }
                     var forgotPasswordModel = new ForgotPasswordModel
                     {
                         Username = model.Username,
