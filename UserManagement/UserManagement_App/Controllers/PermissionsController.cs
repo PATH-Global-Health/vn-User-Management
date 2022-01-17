@@ -38,13 +38,13 @@ namespace UserManagement_App.Controllers
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
         }
-        //[HttpPut("Resource/ChangeAPIAuthorization/{permissionId}/{isAuthorized}")]
-        //public IActionResult ChangeAPIAuthorizationResourcePermission(string permissionId, bool isAuthorized)
-        //{
-        //    ResultModel result = _permissionsService.ChangeAPIAuthorizationResourcePermission(permissionId, isAuthorized);
-        //    if (result.Succeed) return Ok(result.Data);
-        //    return BadRequest(result.ErrorMessage);
-        //}
+        [HttpPut("Resource/ChangeAPIAuthorization/{permissionId}/{isAuthorized}")]
+        public IActionResult ChangeAPIAuthorizationResourcePermission(string permissionId, bool isAuthorized)
+        {
+            ResultModel result = _permissionsService.ChangeAPIAuthorizationResourcePermission(permissionId, isAuthorized);
+            if (result.Succeed) return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
+        }
         [HttpPut("Resource")]
         public IActionResult CreateResourcePermission([FromBody] ResourcePermissionCreateModel model)
         {
