@@ -275,7 +275,7 @@ namespace Service.Implementations
                     user.IsElasticSynced = response.Succeed;
                 }
                 _dbContext.Users.InsertOne(user);
-                if (!string.IsNullOrEmpty(request.GroupName))
+                if (string.IsNullOrEmpty(request.GroupName))
                 {
                     request.GroupName = "CUSTOMER";
                 }
