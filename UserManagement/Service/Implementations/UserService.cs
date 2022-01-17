@@ -275,6 +275,10 @@ namespace Service.Implementations
                     user.IsElasticSynced = response.Succeed;
                 }
                 _dbContext.Users.InsertOne(user);
+                if (!string.IsNullOrEmpty(request.GroupName))
+                {
+                    request.GroupName = "CUSTOMER";
+                }
                 _groupService.AddUsersByGroupName(request.GroupName, new List<string> { user.Id });
                 result.Succeed = true;
                 result.Data = user.Id;
@@ -1516,18 +1520,18 @@ namespace Service.Implementations
 
                 //check user send mail
 
-                var baseKey = "ForgotPassword-"+isExistedUser.Username;
+                var baseKey = "ForgotPassword-" + isExistedUser.Username;
 
                 string tokenUser = "";
                 tokenUser = await GetCache<string>(baseKey);
-                if(tokenUser!=null)
+                if (tokenUser != null)
                 {
                     throw new Exception(ErrorConstants.SENT_EMAIL_FORGOT_PASSWORD);
                 }
 
 
                 var token = GenerateTokenForgotPassword();
-                SetCache(baseKey, token, 5,5);
+                SetCache(baseKey, token, 5, 5);
                 SetCache(token, isExistedUser.Id, 5, 5);
 
                 var urlResetPassword = "https://scd.quanlyhiv.vn/resetpassword?token=";
@@ -1538,10 +1542,10 @@ namespace Service.Implementations
                     To = model.Email,
                     Subject = $"Set new password USAID",
                     Text = $"Hi {isExistedUser.Username} \n" +
-                           $"Follow this link to set your password: {urlResetPassword2+token}\n" +
-                           $"================================== \n"+
+                           $"Follow this link to set your password: {urlResetPassword2 + token}\n" +
+                           $"================================== \n" +
                            $"Xin chào {isExistedUser.Username} \n" +
-                           $"Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: {urlResetPassword2+token} \n"
+                           $"Sử dụng đường dẫn này để đặt mật khẩu cho tài khoản của bạn: {urlResetPassword2 + token} \n"
                 });
 
                 result.Succeed = isMailSent;
@@ -1612,7 +1616,7 @@ namespace Service.Implementations
             return default(T);
         }
 
-        public async void SetCache<T>(string key, T data,int absoluteExpirationMinutes,int etSlidingExpirationMinutes)
+        public async void SetCache<T>(string key, T data, int absoluteExpirationMinutes, int etSlidingExpirationMinutes)
         {
             var dataSerialize = JsonConvert.SerializeObject(data);
             var dataToRedis = Encoding.UTF8.GetBytes(dataSerialize);
@@ -1623,7 +1627,7 @@ namespace Service.Implementations
         }
 
 
-        public  string GenerateTokenForgotPassword()
+        public string GenerateTokenForgotPassword()
         {
             string token = "";
 
@@ -1631,7 +1635,7 @@ namespace Service.Implementations
             {
                 token += Guid.NewGuid().ToString();
             }
-            return token.Replace("-","");
+            return token.Replace("-", "");
         }
 
 
@@ -1691,7 +1695,7 @@ namespace Service.Implementations
                         Username = model.Username,
                         Email = model.Email
                     };
-                    var isSend =await ForgotPassword(forgotPasswordModel);
+                    var isSend = await ForgotPassword(forgotPasswordModel);
                     if (!isSend.Succeed)
                     {
                         throw new Exception(ErrorConstants.CAN_NOT_SEND_EMAIL);
