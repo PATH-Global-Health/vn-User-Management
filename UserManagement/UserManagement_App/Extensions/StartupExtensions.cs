@@ -141,8 +141,20 @@ namespace UserManagement_App.Extensions
 
         public static void AddMongoDbContext(this IServiceCollection services, string connectionString, string dbName)
         {
-            services.AddSingleton<IMongoClient>(s => new MongoClient(connectionString));
-            services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(), dbName));
+            string ct, dbname;
+            if (ExternalEnv.APP_CONNECTION_STRING != null && ExternalEnv.APP_DB_NAME != null)
+            {
+                ct = ExternalEnv.APP_CONNECTION_STRING;
+                dbname = ExternalEnv.APP_DB_NAME;
+            }
+            else
+            {
+                ct = connectionString;
+                dbname = dbName;
+
+            }
+            services.AddSingleton<IMongoClient>(s => new MongoClient(ct));
+            services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(),dbname));
         }
         public static void ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {
