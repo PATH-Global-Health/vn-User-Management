@@ -5,6 +5,7 @@ using Data.MongoCollections;
 using Data.ViewModels;
 using Data.ViewModels.ElasticSearchs;
 using Data.ViewModels.ProfileAPIs;
+using Data.ViewModels.SMSs;
 using Data.ViewModels.Users;
 using Flurl.Http;
 using LazyCache;
@@ -48,12 +49,13 @@ namespace Service.Implementations
         private readonly IAppCache _cache;
         private readonly bool isProduction = false;
         private readonly IDistributedCache _distributedCache;
+        public readonly SMSAuthorization _smsAuthorization;
 
         public UserService(IMapper mapper, IConfiguration configuration, ApplicationDbContext dbContext,
                 IHttpClientFactory httpClientFactory, IMailService mailService,
                 IFacebookAuthService facebookAuthService, IGoogleAuthService googleAuthService,
                 ISMSService smsService, IVerifyUserPublisher publisher, ElasticSettings elasticSettings,
-                IGroupService groupService, IAppCache cache, IDistributedCache distributedCache)
+                IGroupService groupService, IAppCache cache, IDistributedCache distributedCache, SMSAuthorization smsAuthorization)
         {
             _mapper = mapper;
             _configuration = configuration;
@@ -68,6 +70,8 @@ namespace Service.Implementations
             _groupService = groupService;
             _cache = cache;
             _distributedCache = distributedCache;
+            _smsAuthorization = smsAuthorization;
+            isProduction = _smsAuthorization.Active;
         }
 
         public async Task<ResultModel> ChangePasswordAsync(ChangePasswordModel model, string userId)
