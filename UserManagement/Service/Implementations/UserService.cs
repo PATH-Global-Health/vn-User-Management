@@ -1714,5 +1714,18 @@ namespace Service.Implementations
             }
             return result;
         }
+
+        public async Task<UserStatisticModel> Statistic(GetUserStatistic request)
+        {
+            var registeredUsersFilters = Builders<UserInformation>.Filter.Lte(x => x.DateCreated, request.ToDate);
+            registeredUsersFilters &= Builders<UserInformation>.Filter.Gte(x => x.DateCreated, request.FromDate);
+
+            var registeredUsersNumber = await _dbContext.Users.Find(registeredUsersFilters)
+                .CountDocumentsAsync();
+            return new UserStatisticModel
+            {
+                RegisteredUsersNumber = registeredUsersNumber,
+            };
+        }
     }
 }

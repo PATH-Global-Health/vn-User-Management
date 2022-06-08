@@ -377,15 +377,15 @@ namespace UserManagement_App.Controllers
         [AllowAnonymous]
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
-        { 
-           await _userService.ForgotPassword(model);
-           return Ok();
+        {
+            await _userService.ForgotPassword(model);
+            return Ok();
         }
         [AllowAnonymous]
         [HttpPut("SetNewPassword")]
         public async Task<IActionResult> ChangePassword(SetUserPasswordModel model)
         {
-            var result =await _userService.SetUserPassword(model);
+            var result = await _userService.SetUserPassword(model);
             if (result.Succeed) return Ok();
             return BadRequest(result.ErrorMessage);
         }
@@ -404,6 +404,20 @@ namespace UserManagement_App.Controllers
             var result = await _userService.CreateAccountCBO(model);
             if (result.Succeed) return Ok(result.Data);
             return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpGet("Statistic")]
+        public async Task<IActionResult> Statistic([FromQuery] GetUserStatistic request)
+        {
+            try
+            {
+                var result = await _userService.Statistic(request);
+                return Ok(result);
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

@@ -124,8 +124,17 @@ namespace Data.ViewModels
         public bool IsDelete { get; set; }
     }
 
-    public class CBOCreateModel:UserCreateModel
+    public class CBOCreateModel : UserCreateModel
     {
         public bool HasSendInitialEmail { get; set; }
+    }
+    public class GetUserStatistic
+    {
+        public DateTime FromDate { get; set; } = DateTime.UtcNow.Date;
+        public DateTime ToDate { get; set; } = DateTime.UtcNow.Date.AddDays(1);
+    }
+    public class UserStatisticModel
+    {
+        public long RegisteredUsersNumber { get; set; }
     }
 }
