@@ -31,11 +31,13 @@ namespace Data.ViewModels
     {
         public string AppName { get; set; }
         public int UsersNumber { get; set; }
+        public int SessionsNumber { get; set; }
         public List<ServiceNameSessionStatistic> ServiceStatistics { get; set; }
         public class ServiceNameSessionStatistic
         {
             public string ServiceName { get; set; }
             public int UsersNumber { get; set; }
+            public int SessionsNumber { get; set; }
         }
     }
 }

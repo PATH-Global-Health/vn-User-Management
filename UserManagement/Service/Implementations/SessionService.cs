@@ -38,12 +38,14 @@ namespace Service.Implementations
                 {
                     AppName = app.Key,
                     UsersNumber = app.Select(y => y.UserId).Distinct().Count(),
+                    SessionsNumber = app.Select(y => y.UserId).Count(),
                     ServiceStatistics = app
                         .GroupBy(sg => sg.ServiceName)
                         .Select(service => new SessionStatisticModel.ServiceNameSessionStatistic
                         {
                             ServiceName = service.Key,
                             UsersNumber = service.Select(y => y.UserId).Distinct().Count(),
+                            SessionsNumber = service.Select(y => y.UserId).Count(),
                         }).ToList(),
                 })
                 .ToList();
