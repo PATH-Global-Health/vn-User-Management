@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <Folder Include="DataAccess\" />
-    <Folder Include="MongoCollections\" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="MongoDB.Bson" />

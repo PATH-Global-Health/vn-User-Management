@@ -27,6 +27,7 @@ namespace Data.DataAccess
         public IMongoCollection<SecurityQuestion> SecurityQuestions => _db.GetCollection<SecurityQuestion>("securityQuestions");
 
         public IMongoCollection<ApiModule> ApiModules => _db.GetCollection<ApiModule>("apiModules");
+        public IMongoCollection<Session> Sessions => _db.GetCollection<Session>("sessions");
 
 
         public IClientSessionHandle StartSession()
@@ -135,6 +136,10 @@ namespace Data.DataAccess
             if (!collectionNames.Any(name => name == "provincialInformation"))
             {
                 _db.CreateCollection("provincialInformation");
+            }
+            if (!collectionNames.Any(name => name == "sessions"))
+            {
+                _db.CreateCollection("sessions");
             }
         }
 

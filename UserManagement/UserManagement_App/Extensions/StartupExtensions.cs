@@ -36,6 +36,8 @@ namespace UserManagement_App.Extensions
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IPermissionsService, PermissionsService>();
+            services.AddScoped<ISessionService, SessionService>();
+
             services.AddSingleton<IHostedService, CheckConfirmedUserConsumer>();
             services.AddSingleton<IHostedService, Consumer>();
             services.AddSingleton<IHostedService, HomeQuarantineConsumer>();
@@ -154,7 +156,7 @@ namespace UserManagement_App.Extensions
 
             }
             services.AddSingleton<IMongoClient>(s => new MongoClient(ct));
-            services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(),dbname));
+            services.AddScoped(s => new ApplicationDbContext(s.GetRequiredService<IMongoClient>(), dbname));
         }
         public static void ConfigRedis(this IServiceCollection services, IConfiguration configuration)
         {
