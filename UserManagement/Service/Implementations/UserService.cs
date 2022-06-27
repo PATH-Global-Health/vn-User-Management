@@ -1721,10 +1721,13 @@ namespace Service.Implementations
             registeredUsersFilters &= Builders<UserInformation>.Filter.Gte(x => x.DateCreated, request.FromDate);
 
             var registeredUsersNumber = await _dbContext.Users.Find(registeredUsersFilters)
-                .CountDocumentsAsync();
+                .ToListAsync();
+            var unverifiedRegisteredUsersNumber = registeredUsersNumber.Where(x => !x.IsConfirmed).Count();
+            var verifiedRegisteredUsersNumber = registeredUsersNumber.Where(x => x.IsConfirmed).Count();
             return new UserStatisticModel
             {
-                RegisteredUsersNumber = registeredUsersNumber,
+                UnverifiedRegisteredUsersNumber = unverifiedRegisteredUsersNumber,
+                VerifiedRegisteredUsersNumber = verifiedRegisteredUsersNumber,
             };
         }
     }

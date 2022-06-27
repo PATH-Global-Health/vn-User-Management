@@ -135,6 +135,7 @@ namespace Data.ViewModels
     }
     public class UserStatisticModel
     {
-        public long RegisteredUsersNumber { get; set; }
+        public long UnverifiedRegisteredUsersNumber { get; set; }
+        public long VerifiedRegisteredUsersNumber { get; set; }
     }
 }
